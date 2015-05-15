@@ -9,4 +9,7 @@ a {
 
 #spooterCanvas {
   border: 1px solid #c3c3c3;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
