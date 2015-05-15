@@ -9,9 +9,9 @@
 
   PLAYER_SPEED_LIMIT = 300;
 
-  MIN_ENEMIES = 5;
+  MIN_ENEMIES = 15;
 
-  MAX_ENEMIES = 50;
+  MAX_ENEMIES = 100;
 
   ENEMY_SPAWN_PERCENTAGE = .05;
 
@@ -33,8 +33,8 @@
       this.createBullet = __bind(this.createBullet, this);
       this.handleShoot = __bind(this.handleShoot, this);
       this.handleMove = __bind(this.handleMove, this);
-      this.worldWidth = 4000;
-      this.worldHeight = 4000;
+      this.worldWidth = 2000;
+      this.worldHeight = 2000;
       this.players = {};
       this.nextPlayerId = 0;
       this.enemies = {};
@@ -78,7 +78,7 @@
         return;
       }
       mouseX = message.mouseX, mouseY = message.mouseY, playerId = message.playerId;
-      if ((mouseX == null) || (mouseY == null)) {
+      if ((mouseX == null) || (mouseY == null) || !(playerId in this.players)) {
         return;
       }
       player = this.players[playerId];

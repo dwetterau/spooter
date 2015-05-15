@@ -1,8 +1,8 @@
 LOOP_TIME_INTERVAL = 10
 BULLET_SPEED = 500
 PLAYER_SPEED_LIMIT = 300
-MIN_ENEMIES = 5
-MAX_ENEMIES = 50
+MIN_ENEMIES = 15
+MAX_ENEMIES = 100
 ENEMY_SPAWN_PERCENTAGE = .05
 ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
@@ -11,8 +11,8 @@ ENEMY_MIN_SIZE = 20
 class Game
 
   constructor: ->
-    @worldWidth = 4000
-    @worldHeight = 4000
+    @worldWidth = 2000
+    @worldHeight = 2000
 
     @players = {}
     @nextPlayerId = 0
@@ -53,7 +53,7 @@ class Game
       return
 
     {mouseX, mouseY, playerId} = message
-    if not mouseX? or not mouseY?
+    if not mouseX? or not mouseY? or playerId not of @players
       return
 
     player = @players[playerId]
