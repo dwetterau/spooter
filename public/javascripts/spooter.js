@@ -99,10 +99,10 @@ function draw() {
   ctx.strokeStyle = "#808080";
   var gridWidth = 100;
   for (var i = gridWidth; i < drawState.worldWidth; i += gridWidth) {
-    drawLine(0, i, gridHeight, i);
+    drawLine(0, i, drawState.worldHeight  , i);
   }
   for (var i = gridWidth; i < drawState.worldHeight; i+= gridWidth) {
-    drawLine(i, 0, i, gridHeight);
+    drawLine(i, 0, i, drawState.worldWidth);
   }
 
   // draw entities
