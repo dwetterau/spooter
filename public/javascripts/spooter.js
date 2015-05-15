@@ -16,8 +16,8 @@ canvas.addEventListener('mousemove', function(evt) {
   var rect = canvas.getBoundingClientRect();
   var root = document.documentElement;
 
-  mouseX = viewportX + evt.clientX - rect.left - root.scrollLeft;
-  mouseY = viewportY + evt.clientY - rect.top - root.scrollTop;
+  mouseX = evt.clientX - rect.left - root.scrollLeft;
+  mouseY = evt.clientY - rect.top - root.scrollTop;
 }, false);
 
 canvas.addEventListener('click', function(evt) {
@@ -27,7 +27,8 @@ canvas.addEventListener('click', function(evt) {
 
 function pollMouse() {
   if (mouseX >= 0 && mouseY >= 0) {
-    window.spooter.move(mouseX, mouseY);
+    console.log("moving: (" + mouseX + ", " + mouseY + ")");
+    window.spooter.move(viewportX + mouseX, viewportY + mouseY);
   }
   setTimeout(pollMouse, 10);
 }
