@@ -2,6 +2,9 @@ LOOP_TIME_INTERVAL = 10
 MAX_BULLET_SPEED = 500
 PLAYER_SPEED_LIMIT = 200
 PLAYER_ACCELERATION_LIMIT = 200
+PLAYER_SHRINKAGE = 2
+PLAYER_GROWAGE = 10
+PLAYER_MIN_SIZE = 15
 
 MIN_ENEMIES = 15
 MAX_ENEMIES = 50
@@ -12,7 +15,7 @@ ENEMY_MIN_SIZE = 20
 ENEMY_SPEED_LIMIT = 120
 ENEMY_ACCELERATION_LIMIT = 100
 ENEMY_VISION_DIST = 250
-ENEMY_SHOOT_PERCENTAGE = .01
+ENEMY_SHOOT_PERCENTAGE = .003
 
 BULLET_MIN_SIZE = 5
 BULLET_SIZE_FACTOR = .2
@@ -86,7 +89,7 @@ class Game
     vx = p.ax
     vy = p.ay
 
-    @createBullet x, y, vx, vy, p.type, p.r
+    @createBullet x, y, vx, vy, p.type, p.r, p.id
 
   createPlayer: (playerId) ->
     x = Math.random() * @worldWidth
@@ -103,7 +106,7 @@ class Game
       ay: 0
     }
 
-  createBullet: (x, y, vx, vy, ownerType, ownerR) =>
+  createBullet: (x, y, vx, vy, ownerType, ownerR, ownerId) =>
     id = @nextBulletId++
     mag = Math.sqrt(vx * vx + vy * vy)
 
@@ -128,6 +131,7 @@ class Game
       vx
       vy
       ownerType
+      ownerId
     }
 
   createEnemy: =>
@@ -318,8 +322,7 @@ class Game
       if Math.random() < ENEMY_SHOOT_PERCENTAGE
         ax = closestPlayer.x - enemy.x
         ay = closestPlayer.y - enemy.y
-        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r
-        console.log "enemy shooting"
+        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r, enemy.id
 
 
   moveEnemy: (enemy, dt) =>
@@ -350,6 +353,7 @@ class Game
 
     # Process the bullet collisions
     enemiesToDelete = []
+    bulletsToRemove = []
     for id, bullet of @bullets
       if bullet.ownerType == 'player'
         for eid, enemy of @enemies
@@ -360,11 +364,14 @@ class Game
             bulletsToRemove.push id
             if @shrinkEnemy enemy, bullet
               enemiesToDelete[eid] = true
+              if bullet.ownerId of @players
+                @players[bullet.ownerId].r += PLAYER_GROWAGE
       else if bullet.ownerType == 'enemy'
         for pid, player of @players
           if @collides player, bullet
-            # TODO: do something
-            console.log "player got hit by bullet from enemy"
+            player.r -= PLAYER_SHRINKAGE #TODO shrink by size of bullet or something?
+            player.r = Math.max(player.r, PLAYER_MIN_SIZE)
+            bulletsToRemove.push id
 
     for eid of enemiesToDelete
       delete @enemies[eid]
