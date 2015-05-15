@@ -93,16 +93,16 @@ function draw() {
 
   // draw borders
   ctx.strokeStyle = "#000000";
-  ctx.strokeRect(0, 0, drawState.worldWidth, drawState.worldHeight);
+  ctx.strokeRect(-viewportX, -viewportY, drawState.worldWidth, drawState.worldHeight);
 
   // draw grid lines
   ctx.strokeStyle = "#808080";
   var gridWidth = 100;
   for (var i = gridWidth; i < drawState.worldWidth; i += gridWidth) {
-    drawLine(0, i, drawState.worldHeight  , i);
+    drawLine(-viewportX, i - viewportY, drawState.worldHeight - viewportX, i - viewportY);
   }
   for (var i = gridWidth; i < drawState.worldHeight; i+= gridWidth) {
-    drawLine(i, 0, i, drawState.worldWidth);
+    drawLine(i - viewportX, -viewportY, i - viewportX, drawState.worldWidth - viewportY);
   }
 
   // draw entities
