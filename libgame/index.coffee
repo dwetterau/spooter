@@ -5,6 +5,7 @@ PLAYER_ACCELERATION_LIMIT = 200
 PLAYER_SHRINKAGE = 2
 PLAYER_GROWAGE = 10
 PLAYER_MIN_SIZE = 15
+PLAYER_MAX_SIZE = 80
 
 MIN_ENEMIES = 15
 MAX_ENEMIES = 50
@@ -288,10 +289,16 @@ class Game
     e2.vx = v2.a
     e2.vy = v2.b
 
-  shrinkEnemy: (enemy, bullet) =>
-    return true if enemy.r < bullet.r
-    enemy.r = Math.sqrt(enemy.r * enemy.r - bullet.r * bullet.r)
-    return enemy.r < ENEMY_MIN_SIZE
+  shrinkEntity: (entity, bullet) =>
+    er2 = entity.r * entity.r
+    br2 = bullet.r * bullet.r * 10
+    return true if er2 < br2
+    entity.r = Math.sqrt(er2 - br2)
+    if entity.type == 'player'
+      return entity.r < PLAYER_MIN_SIZE
+    if entity.type == 'enemy'
+      return entity.r < ENEMY_MIN_SIZE
+    return false
 
   enemyAI: (enemy) =>
     # check if done wandering
@@ -362,16 +369,19 @@ class Game
 
           if @collides enemy, bullet
             bulletsToRemove.push id
-            if @shrinkEnemy enemy, bullet
+            if @shrinkEntity enemy, bullet
               enemiesToDelete[eid] = true
               if bullet.ownerId of @players
-                @players[bullet.ownerId].r += PLAYER_GROWAGE
+                @players[bullet.ownerId].r = Math.min(PLAYER_GROWAGE + @players[bullet.ownerId].r, PLAYER_MAX_SIZE)
       else if bullet.ownerType == 'enemy'
         for pid, player of @players
           if @collides player, bullet
-            player.r -= PLAYER_SHRINKAGE #TODO shrink by size of bullet or something?
-            player.r = Math.max(player.r, PLAYER_MIN_SIZE)
             bulletsToRemove.push id
+            if @shrinkEntity player, bullet
+              # player died
+              id = player.id
+              delete @players[id]
+              @createPlayer(id)
 
     for eid of enemiesToDelete
       delete @enemies[eid]
