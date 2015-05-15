@@ -1,5 +1,5 @@
 LOOP_TIME_INTERVAL = 10
-BULLET_SPEED = 500
+MAX_BULLET_SPEED = 500
 PLAYER_SPEED_LIMIT = 200
 PLAYER_ACCELERATION_LIMIT = 200
 
@@ -111,10 +111,13 @@ class Game
     if mag == 0
       return
 
-    vx *= BULLET_SPEED / mag
-    vy *= BULLET_SPEED / mag
+    vx *= MAX_BULLET_SPEED / mag
+    vy *= MAX_BULLET_SPEED / mag
 
     r = Math.max(BULLET_MIN_SIZE, Math.round(ownerR * BULLET_SIZE_FACTOR))
+
+    vx *= BULLET_MIN_SIZE / r
+    vy *= BULLET_MIN_SIZE / r
 
     @bullets[id] = {
       type: 'bullet'
@@ -281,8 +284,9 @@ class Game
     e2.vx = v2.a
     e2.vy = v2.b
 
-  shrinkEnemy: (enemy) =>
-    enemy.r -= ENEMY_SHRINKAGE
+  shrinkEnemy: (enemy, bullet) =>
+    return true if enemy.r < bullet.r
+    enemy.r = Math.sqrt(enemy.r * enemy.r - bullet.r * bullet.r)
     return enemy.r < ENEMY_MIN_SIZE
 
   enemyAI: (enemy) =>
@@ -354,7 +358,7 @@ class Game
 
           if @collides enemy, bullet
             bulletsToRemove.push id
-            if @shrinkEnemy enemy
+            if @shrinkEnemy enemy, bullet
               enemiesToDelete[eid] = true
       else if bullet.ownerType == 'enemy'
         for pid, player of @players
