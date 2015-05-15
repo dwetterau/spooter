@@ -1,3 +1,7 @@
+LOOP_TIME_INTERVAL = 10
+BULLET_SPEED = 500
+PLAYER_SPEED_LIMIT = 300
+
 class Game
 
   constructor: ->
@@ -6,8 +10,11 @@ class Game
 
     @players = {}
     @nextPlayerId = 0
+
     @enemies = {}
+
     @bullets = {}
+    @nextBulletId = 0
 
     @io = null
 
@@ -26,6 +33,7 @@ class Game
     @createPlayer(newPlayerId)
 
     socket.on "move", @handleMove
+    socket.on "shoot", @handleShoot
     socket.on "disconnect", =>
       console.log "Player disconnected!", newPlayerId
       @deletePlayer newPlayerId
@@ -45,6 +53,16 @@ class Game
     player.mouseX = mouseX
     player.mouseY = mouseY
 
+  handleShoot: (message) =>
+    if not message? or not message.playerId?
+      return
+
+    {playerId} = message
+    if playerId not of @players
+      return
+
+    @createBullet @players[playerId]
+
   createPlayer: (playerId) ->
     x = Math.random() * @worldWidth
     y = Math.random() * @worldHeight
@@ -58,6 +76,32 @@ class Game
       vy: 0
       mouseX: x
       mouseY: y
+    }
+
+  createBullet: (entity) =>
+    id = @nextBulletId++
+
+    vx = entity.mouseX - entity.x
+    vy = entity.mouseY - entity.y
+
+    mag = Math.sqrt(vx * vx + vy * vy)
+
+    # We don't know where to shoot it
+    if mag == 0
+      return
+
+    vx *= BULLET_SPEED / mag
+    vy *= BULLET_SPEED / mag
+
+    @bullets[id] = {
+      type: 'bullet'
+      id
+      r: 5
+      x: entity.x
+      y: entity.y
+      vx
+      vy
+      ownerType: entity.type
     }
 
   deletePlayer: (playerId) =>
@@ -80,7 +124,6 @@ class Game
     }
     @io.sockets.emit 'state', state
 
-  SPEED_LIMIT = 300
   movePlayer: (player, dt) =>
     # Update the velocity based on the mouse
     ax = player.mouseX - player.x
@@ -117,18 +160,42 @@ class Game
       player.vy = 0
 
     speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
-    if (speed > SPEED_LIMIT)
-      player.vx *= SPEED_LIMIT / speed;
-      player.vy *= SPEED_LIMIT / speed;
+    if (speed > PLAYER_SPEED_LIMIT)
+      player.vx *= PLAYER_SPEED_LIMIT / speed;
+      player.vy *= PLAYER_SPEED_LIMIT / speed;
 
-    return player
+  # Returns true if the bullet is now gone
+  moveBullet: (bullet, dt) ->
+    # Update the position based on the velocity
+    bullet.x += dt * bullet.vx
+    bullet.y += dt * bullet.vy
+
+    if bullet.x - bullet.r < 0
+      return true
+
+    if bullet.x + bullet.r > @worldWidth
+      return true
+
+    if bullet.y - bullet.r < 0
+      return true
+
+    if bullet.y + bullet.r > @worldHeight
+      return true
+    return false
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position
-    for id, player of @players
-      @players[id] = @movePlayer player, dt
+    for id of @players
+      @movePlayer @players[id], dt
 
-  LOOP_TIME_INTERVAL = 10
+    bulletsToRemove = []
+    for id of @bullets
+      if @moveBullet @bullets[id], dt
+        bulletsToRemove.push id
+
+    for id in bulletsToRemove
+      delete @bullets[id]
+
   loop: =>
     startTime = new Date().getTime()
 

@@ -13,8 +13,8 @@ move = (mouseX, mouseY) ->
   socket.emit("move", {playerId, mouseX, mouseY})
 
 shoot = ->
-  console.log "Shooting"
-  socket.emit("shoot", {})
+  playerId = getPlayerId()
+  socket.emit("shoot", {playerId})
 
 getPlayerId = ->
   return window.spooter.playerId
