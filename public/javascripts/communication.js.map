@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "communication.js",
+  "sourceRoot": "",
+  "sources": [
+    "communication.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA;AAAA"
+}
