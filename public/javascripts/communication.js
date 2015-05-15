@@ -7,12 +7,10 @@
   socket.on('initialize', function(data) {
     var playerId;
     playerId = data.playerId;
-    clearState(playerId);
-    return move(-1, -1);
+    return clearState(playerId);
   });
 
   socket.on('state', function(data) {
-    console.log(data);
     return setState(data);
   });
 
@@ -37,14 +35,17 @@
 
   clearState = function(playerId) {
     window.spooter.state = {};
-    return window.spooter.playerId = playerId;
+    window.spooter.playerId = playerId;
+    return window.spooter.initialized = false;
   };
 
   setState = function(newState) {
-    return window.spooter.state = newState;
+    window.spooter.state = newState;
+    return window.spooter.initialized = true;
   };
 
   window.spooter = {
+    initialized: false,
     move: move,
     shoot: shoot,
     state: {}

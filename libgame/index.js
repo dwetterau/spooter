@@ -40,6 +40,7 @@
       socket.on("move", this.handleMove);
       socket.on("disconnect", (function(_this) {
         return function() {
+          console.log("Player disconnected!", newPlayerId);
           return _this.deletePlayer(newPlayerId);
         };
       })(this));
@@ -63,14 +64,19 @@
     };
 
     Game.prototype.createPlayer = function(playerId) {
+      var x, y;
+      x = Math.random() * this.worldWidth;
+      y = Math.random() * this.worldHeight;
       return this.players[playerId] = {
         type: 'player',
         id: playerId,
         r: 20,
-        x: Math.random() * this.worldWidth,
-        y: Math.random() * this.worldHeight,
+        x: x,
+        y: y,
         vx: 0,
-        vy: 0
+        vy: 0,
+        mouseX: x,
+        mouseY: y
       };
     };
 
@@ -107,39 +113,52 @@
     };
 
     Game.prototype.movePlayer = function(player, dt) {
-      var ax, ay;
+      var ax, ay, clampedX, clampedY;
       ax = player.mouseX - player.x;
       ay = player.mouseY - player.y;
       player.vx += dt * ax;
       player.vy += dt * ay;
       player.x += dt * player.vx;
       player.y += dt * player.vy;
+      clampedX = false;
+      clampedY = false;
       if (player.x - player.r < 0) {
+        clampedX = true;
         player.x = player.r;
       }
       if (player.x + player.r > this.worldWidth) {
+        clampedX = true;
         player.x = this.worldWidth - player.r;
       }
       if (player.y - player.r < 0) {
+        clampedY = true;
         player.y = player.r;
       }
       if (player.y + player.r > this.worldHeight) {
-        return player.y = this.worldHeight - player.r;
+        clampedY = true;
+        player.y = this.worldHeight - player.r;
       }
+      if (clampedX) {
+        player.vx = 0;
+      }
+      if (clampedY) {
+        player.vy = 0;
+      }
+      return player;
     };
 
     Game.prototype.doPhysics = function(dt) {
-      var id, player, _i, _len, _ref, _results;
+      var id, player, _ref, _results;
       _ref = this.players;
       _results = [];
-      for (player = _i = 0, _len = _ref.length; _i < _len; player = ++_i) {
-        id = _ref[player];
-        _results.push(player = this.movePlayer(player, dt));
+      for (id in _ref) {
+        player = _ref[id];
+        _results.push(this.players[id] = this.movePlayer(player, dt));
       }
       return _results;
     };
 
-    LOOP_TIME_INTERVAL = 100;
+    LOOP_TIME_INTERVAL = 10;
 
     Game.prototype.loop = function() {
       var diff, startTime;

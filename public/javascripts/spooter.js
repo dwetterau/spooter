@@ -18,12 +18,10 @@ canvas.addEventListener('mousemove', function(evt) {
 
   mouseX = viewportX + evt.clientX - rect.left - root.scrollLeft;
   mouseY = viewportY + evt.clientY - rect.top - root.scrollTop;
-  window.console.log("x: " + mouseX + ", y: " + mouseY);
 }, false);
 
 canvas.addEventListener('click', function(evt) {
   clicked = true;
-  window.console.log("clicked");
   window.spooter.shoot();
 }, false);
 
@@ -43,8 +41,11 @@ function gameLoop() {
   }
   var msdif = curms - lastms;
   lastms = curms;
-  update(msdif);
-  draw();
+
+  if (window.spooter.initialized) {
+    update(msdif);
+    draw();
+  }
   setTimeout(gameLoop, 1);
 }
 
@@ -86,7 +87,6 @@ function draw() {
     if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
       viewportX = drawState.entities[i].x - 320;
       viewportY = drawState.entities[i].y - 240;
-      window.console.log("viewport: (" + viewportX + ", "  + viewportY + ")");
       break;
     }
   }

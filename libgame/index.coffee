@@ -27,6 +27,7 @@ class Game
 
     socket.on "move", @handleMove
     socket.on "disconnect", =>
+      console.log "Player disconnected!", newPlayerId
       @deletePlayer newPlayerId
 
     socket.emit 'initialize', {playerId: newPlayerId}
@@ -45,14 +46,18 @@ class Game
     player.mouseY = mouseY
 
   createPlayer: (playerId) ->
+    x = Math.random() * @worldWidth
+    y = Math.random() * @worldHeight
     @players[playerId] = {
       type: 'player'
       id: playerId
       r: 20
-      x: Math.random() * @worldWidth
-      y: Math.random() * @worldHeight
+      x
+      y
       vx: 0
       vy: 0
+      mouseX: x
+      mouseY: y
     }
 
   deletePlayer: (playerId) =>
@@ -87,24 +92,37 @@ class Game
     player.y += dt * player.vy
 
     # Basic bounds checking
+    clampedX = false
+    clampedY = false
     if player.x - player.r < 0
+      clampedX = true
       player.x = player.r
 
     if player.x + player.r > @worldWidth
+      clampedX = true
       player.x = @worldWidth - player.r
 
     if player.y - player.r < 0
+      clampedY = true
       player.y = player.r
 
     if player.y + player.r > @worldHeight
+      clampedY = true
       player.y = @worldHeight - player.r
+
+    if clampedX
+      player.vx = 0
+    if clampedY
+      player.vy = 0
+
+    return player
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position
-    for id, player in @players
-      player = @movePlayer player, dt
+    for id, player of @players
+      @players[id] = @movePlayer player, dt
 
-  LOOP_TIME_INTERVAL = 100
+  LOOP_TIME_INTERVAL = 10
   loop: =>
     startTime = new Date().getTime()
 
@@ -116,6 +134,5 @@ class Game
       console.log "WARNING: Game loop computation too slow!"
       diff = 0
     setTimeout @loop, diff
-
 
 module.exports = Game

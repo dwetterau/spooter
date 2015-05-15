@@ -4,10 +4,8 @@ socket = io('http://localhost:3001') # TODO change localhost to server endpoint
 socket.on 'initialize', (data) ->
   {playerId} = data
   clearState(playerId)
-  move(-1, -1)
 
 socket.on 'state', (data) ->
-  console.log data
   setState data
 
 move = (mouseX, mouseY) ->
@@ -24,8 +22,10 @@ getPlayerId = ->
 clearState = (playerId) ->
   window.spooter.state = {}
   window.spooter.playerId = playerId
+  window.spooter.initialized = false
 
 setState = (newState) ->
   window.spooter.state = newState
+  window.spooter.initialized = true
 
-window.spooter = {move, shoot, state: {}}
+window.spooter = {initialized: false, move, shoot, state: {}}
