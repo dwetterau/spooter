@@ -192,13 +192,12 @@ class Game
 
     if entity.y + entity.r > @worldHeight
       clampedY = true
-
-      entitiy.y = @worldHeight - entitiy.r - EPSILON
+      entity.y = @worldHeight - entity.r - EPSILON
 
     if clampedX
-      entitiy.vx = -entitiy.vx
+      entity.vx = -entity.vx
     if clampedY
-      entitiy.vy = -entitiy.vy
+      entity.vy = -entity.vy
 
   movePlayer: (player, dt) =>
     # Cap the player's acceleration

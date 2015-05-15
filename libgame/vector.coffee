@@ -13,8 +13,8 @@ class Vector
     @a * v.a + @b * v.b
 
   project: (v) ->
-    overlap = @dot(v) / v.dot(this)
-    return new Vector(v.a * overlap, v.b * overlap)
+    overlap = @dot(v) / v.dot(v)
+    new Vector(v.a * overlap, v.b * overlap)
 
   getMagnitude: ->
     Math.sqrt(@a * @a + @b * @b)
@@ -38,6 +38,6 @@ class Vector
     @b *= factor
 
   scaledVector: (factor) ->
-    new Vector(@a * factor, @b * factor)
+    return new Vector(@a * factor, @b * factor)
 
 module.exports = Vector
