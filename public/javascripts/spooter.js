@@ -27,7 +27,6 @@ canvas.addEventListener('click', function(evt) {
 
 function pollMouse() {
   if (mouseX >= 0 && mouseY >= 0) {
-    console.log("moving: (" + mouseX + ", " + mouseY + ")");
     window.spooter.move(viewportX + mouseX, viewportY + mouseY);
   }
   setTimeout(pollMouse, 10);
