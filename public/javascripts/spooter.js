@@ -1,45 +1,3 @@
-// TODO remove
-window.spooter = { state:
-{
-  worldWidth: 1500,
-  worldHeight: 1500,
-  entities: [
-    { x: 100,
-      y: 100,
-      vx: 50,
-      vy: 50,
-      r: 20,
-      type: "player",
-      id: 0
-    },
-    { x: 20,
-      y: 200,
-      vx: 30,
-      vy: 0,
-      r: 6,
-      type: "bullet",
-      id: 1
-    },
-    { x: 400,
-      y: 400,
-      vx: 0,
-      vy: 0,
-      r: 15,
-      type: "enemy",
-      id: 2
-    },
-    { x: 300,
-      y: 200,
-      vx: 0,
-      vy: 15,
-      r: 20,
-      type: "player",
-      id: 3
-    }
-  ]
-},
-playerId: 0
-};
 
 // important stuff
 var lastms = 0;
@@ -62,7 +20,6 @@ canvas.addEventListener('mousemove', function(evt) {
   mouseX = viewportX + evt.clientX - rect.left - root.scrollLeft;
   mouseY = viewportY + evt.clientY - rect.top - root.scrollTop;
   window.console.log("x: " + mouseX + ", y: " + mouseY);
-  window.spooter.move(mouseX, mouseY);
 }, false);
 
 canvas.addEventListener('click', function(evt) {
@@ -70,6 +27,13 @@ canvas.addEventListener('click', function(evt) {
   window.console.log("clicked");
   window.spooter.shoot();
 }, false);
+
+function pollMouse() {
+  if (mouseX >= 0 && mouseY >= 0) {
+    window.spooter.move(mouseX, mouseY);
+  }
+  setTimeout(pollMouse, 10);
+}
 
 // updating state
 
@@ -141,3 +105,4 @@ function draw() {
 }
 
 gameLoop();
+pollMouse();
