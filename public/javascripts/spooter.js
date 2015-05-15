@@ -71,6 +71,13 @@ function inViewport(e) {
   return true;
 }
 
+function drawLine(x1, y1, x2, y2) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
 function draw() {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, 640, 640);
