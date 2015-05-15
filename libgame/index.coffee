@@ -17,6 +17,10 @@ ENEMY_SHOOT_PERCENTAGE = .01
 BULLET_MIN_SIZE = 5
 BULLET_SIZE_FACTOR = .2
 
+EPSILON = .001
+
+Vector = require('./vector')
+
 class Game
 
   constructor: ->
@@ -176,24 +180,25 @@ class Game
     clampedY = false
     if entity.x - entity.r < 0
       clampedX = true
-      entity.x = entity.r
+      entity.x = entity.r + EPSILON
 
     if entity.x + entity.r > @worldWidth
       clampedX = true
-      entity.x = @worldWidth - entity.r
+      entity.x = @worldWidth - entity.r - EPSILON
 
     if entity.y - entity.r < 0
       clampedY = true
-      entity.y = entity.r
+      entity.y = entity.r + EPSILON
 
     if entity.y + entity.r > @worldHeight
       clampedY = true
-      entity.y = @worldHeight - entity.r
+
+      entitiy.y = @worldHeight - entitiy.r - EPSILON
 
     if clampedX
-      entity.vx = 0
+      entitiy.vx = -entitiy.vx
     if clampedY
-      entity.vy = 0
+      entitiy.vy = -entitiy.vy
 
   movePlayer: (player, dt) =>
     # Cap the player's acceleration
@@ -228,6 +233,54 @@ class Game
     dy = (e1.y - e2.y)
     dr = e1.r + e2.r
     return dx * dx + dy * dy <= dr * dr
+
+  bounceCollision: (e1, e2) ->
+    m1 = e1.r * e1.r * Math.PI
+    m2 = e2.r * e2.r * Math.PI
+
+    between = new Vector(e2.x - e1.x, e2.y - e1.y)
+
+    # Move the second entity out of the collision
+    between.makeMagnitude e1.r + e2.r + EPSILON
+    e2.x = e1.x + between.a
+    e2.y = e1.y + between.b
+
+    centerVelocity = new Vector(
+      (e1.vx * m1 + e2.vx * m2) / (m1 + m2),
+      (e1.vy * m1 + e2.vy * m2) / (m1 + m2)
+    )
+    # The collision switches the direction
+    centerVelocity.reverse()
+
+    v1 = new Vector e1.vx, e1.vy
+    v2 = new Vector e2.vx, e2.vy
+
+    # Convert these velocities to center of mass view
+    v1.addVector centerVelocity
+    v2.addVector centerVelocity
+
+    between.normalize()
+    v1Between = v1.project between
+    v1Between.reverse()
+    v1Between.scaleInPlace 2
+    v1.addVector v1Between
+
+    between.reverse()
+    v2Between = v2.project between
+    v2Between.reverse()
+    v2Between.scaleInPlace 2
+    v2.addVector v2Between
+
+    # Convert the velocities back out of center of mass view
+    centerVelocity.reverse()
+    v1.addVector centerVelocity
+    v2.addVector centerVelocity
+
+    # Copy the new velocities back out
+    e1.vx = v1.a
+    e1.vy = v1.b
+    e2.vx = v2.a
+    e2.vy = v2.b
 
   shrinkEnemy: (enemy) =>
     enemy.r -= ENEMY_SHRINKAGE
@@ -292,6 +345,7 @@ class Game
     for id in bulletsToRemove
       delete @bullets[id]
 
+    # Process the bullet collisions
     enemiesToDelete = []
     for id, bullet of @bullets
       if bullet.ownerType == 'player'
@@ -320,6 +374,12 @@ class Game
 
     for id, enemy of @enemies
       @moveEnemy enemy, dt
+
+    # Process the player to enemy collisions
+    for pid, player of @players
+      for eid, enemy of @enemies
+        if @collides enemy, player
+          @bounceCollision enemy, player
 
   loop: =>
     startTime = new Date().getTime()
