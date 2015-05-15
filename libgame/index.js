@@ -82,8 +82,8 @@
         return;
       }
       player = this.players[playerId];
-      player.mouseX = mouseX;
-      return player.mouseY = mouseY;
+      player.ax = mouseX - player.x;
+      return player.ay = mouseY - player.y;
     };
 
     Game.prototype.handleShoot = function(message) {
@@ -97,8 +97,8 @@
       }
       p = this.players[playerId];
       x = p.x, y = p.y;
-      vx = p.mouseX - x;
-      vy = p.mouseY - y;
+      vx = p.ax;
+      vy = p.ay;
       return this.createBullet(x, y, vx, vy, p.type);
     };
 
@@ -114,8 +114,8 @@
         y: y,
         vx: 0,
         vy: 0,
-        mouseX: x,
-        mouseY: y
+        ax: 0,
+        ay: 0
       };
     };
 
@@ -192,11 +192,9 @@
     };
 
     Game.prototype.movePlayer = function(player, dt) {
-      var ax, ay, clampedX, clampedY, speed;
-      ax = player.mouseX - player.x;
-      ay = player.mouseY - player.y;
-      player.vx += dt * ax;
-      player.vy += dt * ay;
+      var clampedX, clampedY, speed;
+      player.vx += dt * player.ax;
+      player.vy += dt * player.ay;
       player.x += dt * player.vx;
       player.y += dt * player.vy;
       clampedX = false;

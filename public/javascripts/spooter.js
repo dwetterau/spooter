@@ -46,7 +46,7 @@ function gameLoop() {
     update(msdif);
     draw();
   }
-  setTimeout(gameLoop, 1);
+  setTimeout(gameLoop, 5);
 }
 
 // basically move objects along their velocity

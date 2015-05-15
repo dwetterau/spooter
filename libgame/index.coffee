@@ -57,8 +57,8 @@ class Game
       return
 
     player = @players[playerId]
-    player.mouseX = mouseX
-    player.mouseY = mouseY
+    player.ax = mouseX - player.x
+    player.ay = mouseY - player.y
 
   handleShoot: (message) =>
     if not message? or not message.playerId?
@@ -70,8 +70,8 @@ class Game
 
     p = @players[playerId]
     {x, y} = p
-    vx = p.mouseX - x
-    vy = p.mouseY - y
+    vx = p.ax
+    vy = p.ay
 
     @createBullet x, y, vx, vy, p.type
 
@@ -86,8 +86,8 @@ class Game
       y
       vx: 0
       vy: 0
-      mouseX: x
-      mouseY: y
+      ax: 0
+      ay: 0
     }
 
   createBullet: (x, y, vx, vy, type) =>
@@ -147,11 +147,9 @@ class Game
 
   movePlayer: (player, dt) =>
     # Update the velocity based on the mouse
-    ax = player.mouseX - player.x
-    ay = player.mouseY - player.y
-    player.vx += dt * ax
-    player.vy += dt * ay
-
+    player.vx += dt * player.ax
+    player.vy += dt * player.ay
+)
     # Update the position based on the velocity
     player.x += dt * player.vx
     player.y += dt * player.vy
