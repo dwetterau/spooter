@@ -11,6 +11,9 @@ var users = require('./routes/');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+
+server.listen(3001);
+
 var Game = require('./libgame');
 
 var game = new Game();
