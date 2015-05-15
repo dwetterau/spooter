@@ -209,7 +209,7 @@ class Game
       entity.y = @worldHeight - entity.r - EPSILON
 
     if clampedX
-      entity.vx = -entity.vxpackage.json
+      entity.vx = -entity.vx
     if clampedY
       entity.vy = -entity.vy
 
