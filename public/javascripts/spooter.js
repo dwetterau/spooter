@@ -40,7 +40,42 @@ window.spooter = { state:
   ]
 }};
 
+// important stuff
 var lastms = 0;
+
+var canvas=document.getElementById("spooterCanvas");
+var ctx=canvas.getContext("2d"); 
+
+// input
+var mouseX = -1;
+var mouseY = -1;
+var clicked;
+
+canvas.addEventListener('mousemove', function(evt) {
+  var rect = canvas.getBoundingClientRect();
+  var root = document.documentElement
+
+  mouseX = evt.clientX - rect.left - root.scrollLeft;
+  mouseY = evt.clientY - rect.top - root.scrollTop;
+  window.console.log("x: " + mouseX + ", y: " + mouseY);
+}, false);
+
+canvas.addEventListener('click', function(evt) {
+  clicked = true;
+  window.console.log("clicked");
+}, false);
+
+function processInput() {
+  if (mouseX >= 0 && mouseY >= 0) {
+    move(mouseX, mouseY);
+  }
+  if (clicked) {
+    shoot();
+  }
+  clicked = false;
+}
+
+// updating state
 
 function gameLoop() {
   var curms = new Date().getTime();
@@ -63,8 +98,7 @@ function update(framems) {
   }
 }
 
-var c=document.getElementById("spooterCanvas");
-var ctx=c.getContext("2d"); 
+// drawing stuff
 
 function drawCircle(x, y, radius) {
   ctx.beginPath();
