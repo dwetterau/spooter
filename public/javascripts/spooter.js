@@ -53,27 +53,19 @@ var clicked;
 
 canvas.addEventListener('mousemove', function(evt) {
   var rect = canvas.getBoundingClientRect();
-  var root = document.documentElement
+  var root = document.documentElement;
 
   mouseX = evt.clientX - rect.left - root.scrollLeft;
   mouseY = evt.clientY - rect.top - root.scrollTop;
   window.console.log("x: " + mouseX + ", y: " + mouseY);
+  window.spoter.move(mouseX, mouseY);
 }, false);
 
 canvas.addEventListener('click', function(evt) {
   clicked = true;
   window.console.log("clicked");
+  window.spooter.shoot();
 }, false);
-
-function processInput() {
-  if (mouseX >= 0 && mouseY >= 0) {
-    move(mouseX, mouseY);
-  }
-  if (clicked) {
-    shoot();
-  }
-  clicked = false;
-}
 
 // updating state
 
