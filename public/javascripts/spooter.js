@@ -79,16 +79,21 @@ function inViewport(e) {
   return true;
 }
 
+function startDrawLine() {
+    ctx.beginPath();
+}
+
+function endDrawLine() {
+    ctx.stroke();
+}
+
 function drawLine(x1, y1, x2, y2) {
-  ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.lineTo(x2, y2);
-  ctx.stroke();
 }
 
 function draw() {
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   var drawState = window.spooter.state;
   for (var i = 0; i < drawState.entities.length; i++) {
     if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
@@ -105,12 +110,14 @@ function draw() {
   // draw grid lines
   ctx.strokeStyle = "#808080";
   var gridWidth = 100;
+  startDrawLine();
   for (var i = gridWidth; i < drawState.worldWidth; i += gridWidth) {
     drawLine(-viewportX, i - viewportY, drawState.worldHeight - viewportX, i - viewportY);
   }
   for (var i = gridWidth; i < drawState.worldHeight; i+= gridWidth) {
     drawLine(i - viewportX, -viewportY, i - viewportX, drawState.worldWidth - viewportY);
   }
+  endDrawLine();
 
   // draw entities
   for (var i = 0; i < drawState.entities.length; i++) {

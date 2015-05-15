@@ -10,6 +10,9 @@ ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
 ENEMY_MIN_SIZE = 20
 
+BULLET_MIN_SIZE = 5
+BULLET_SIZE_FACTOR = .2
+
 class Game
 
   constructor: ->
@@ -75,7 +78,7 @@ class Game
     vx = p.ax
     vy = p.ay
 
-    @createBullet x, y, vx, vy, p.type
+    @createBullet x, y, vx, vy, p.type, p.r
 
   createPlayer: (playerId) ->
     x = Math.random() * @worldWidth
@@ -92,7 +95,7 @@ class Game
       ay: 0
     }
 
-  createBullet: (x, y, vx, vy, type) =>
+  createBullet: (x, y, vx, vy, ownerType, ownerR) =>
     id = @nextBulletId++
     mag = Math.sqrt(vx * vx + vy * vy)
 
@@ -103,15 +106,17 @@ class Game
     vx *= BULLET_SPEED / mag
     vy *= BULLET_SPEED / mag
 
+    r = Math.max(BULLET_MIN_SIZE, Math.round(ownerR * BULLET_SIZE_FACTOR))
+
     @bullets[id] = {
       type: 'bullet'
       id
-      r: 5
+      r
       x
       y
       vx
       vy
-      ownerType: type
+      ownerType
     }
 
   createEnemy: =>
