@@ -1,4 +1,3 @@
-
 // important stuff
 var lastms = 0;
 
@@ -78,15 +77,28 @@ function draw() {
   var drawState = window.spooter.state;
   for (var i = 0; i < drawState.entities.length; i++) {
     if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
-      viewportX = Math.max(0, drawState.entities[i].x - 320);
-      viewportX = Math.min(viewportX, drawState.worldWidth - 640);
-      viewportY = Math.max(0, drawState.entities[i].y - 240);
-      viewportY = Math.min(viewportY, drawState.worldHeight - 480);
+      viewportX = drawState.entities[i].x - 320;
+      viewportY = drawState.entities[i].y - 240;
       window.console.log("viewport: (" + viewportX + ", "  + viewportY + ")");
       break;
     }
   }
 
+  // draw borders
+  ctx.strokeStyle = "#000000";
+  ctx.strokeRect(0, 0, drawState.worldWidth, drawState.worldHeight);
+
+  // draw grid lines
+  ctx.strokeStyle = "#808080";
+  var gridWidth = 100;
+  for (var i = gridWidth; i < drawState.worldWidth; i += gridWidth) {
+    drawLine(0, i, gridHeight, i);
+  }
+  for (var i = gridWidth; i < drawState.worldHeight; i+= gridWidth) {
+    drawLine(i, 0, i, gridHeight);
+  }
+
+  // draw entities
   for (var i = 0; i < drawState.entities.length; i++) {
     if (!inViewport(drawState.entities[i])) continue;
     if (drawState.entities[i].type === "player") {
