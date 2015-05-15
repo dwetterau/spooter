@@ -1,7 +1,7 @@
 LOOP_TIME_INTERVAL = 10
 BULLET_SPEED = 500
 PLAYER_SPEED_LIMIT = 200
-PLAYER_ACCELERATION_LIMIT = 50
+PLAYER_ACCELERATION_LIMIT = 200
 
 MIN_ENEMIES = 15
 MAX_ENEMIES = 50
@@ -9,6 +9,10 @@ ENEMY_SPAWN_PERCENTAGE = .001
 ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
 ENEMY_MIN_SIZE = 20
+ENEMY_SPEED_LIMIT = 120
+ENEMY_ACCELERATION_LIMIT = 100
+ENEMY_VISION_DIST = 250
+ENEMY_SHOOT_PERCENTAGE = .01
 
 BULLET_MIN_SIZE = 5
 BULLET_SIZE_FACTOR = .2
@@ -152,49 +156,53 @@ class Game
     }
     @io.sockets.emit 'state', state
 
-  movePlayer: (player, dt) =>
-    # Cap the player's acceleration
-    mag = Math.sqrt(player.ax * player.ax + player.ay * player.ay)
-    if mag > PLAYER_ACCELERATION_LIMIT
-      player.ax *= PLAYER_ACCELERATION_LIMIT / mag
-      player.ay *= PLAYER_ACCELERATION_LIMIT / mag
-
+  moveEntity: (entity, dt, ax, ay, speedLimit) =>
     # Update the velocity based on the mouse
-    player.vx += dt * player.ax
-    player.vy += dt * player.ay
+    entity.vx += dt * ax
+    entity.vy += dt * ay
+
+    # cap velocity
+    speed = Math.sqrt(entity.vx * entity.vx + entity.vy * entity.vy);
+    if (speed > speedLimit)
+      entity.vx *= speedLimit / speed;
+      entity.vy *= speedLimit / speed;
 
     # Update the position based on the velocity
-    player.x += dt * player.vx
-    player.y += dt * player.vy
+    entity.x += dt * entity.vx
+    entity.y += dt * entity.vy
 
     # Basic bounds checking
     clampedX = false
     clampedY = false
-    if player.x - player.r < 0
+    if entity.x - entity.r < 0
       clampedX = true
-      player.x = player.r
+      entity.x = entity.r
 
-    if player.x + player.r > @worldWidth
+    if entity.x + entity.r > @worldWidth
       clampedX = true
-      player.x = @worldWidth - player.r
+      entity.x = @worldWidth - entity.r
 
-    if player.y - player.r < 0
+    if entity.y - entity.r < 0
       clampedY = true
-      player.y = player.r
+      entity.y = entity.r
 
-    if player.y + player.r > @worldHeight
+    if entity.y + entity.r > @worldHeight
       clampedY = true
-      player.y = @worldHeight - player.r
+      entity.y = @worldHeight - entity.r
 
     if clampedX
-      player.vx = 0
+      entity.vx = 0
     if clampedY
-      player.vy = 0
+      entity.vy = 0
 
-    speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
-    if (speed > PLAYER_SPEED_LIMIT)
-      player.vx *= PLAYER_SPEED_LIMIT / speed;
-      player.vy *= PLAYER_SPEED_LIMIT / speed;
+  movePlayer: (player, dt) =>
+    # Cap the player's acceleration
+    mag = Math.sqrt player.ax * player.ax + player.ay * player.ay
+    if mag > PLAYER_ACCELERATION_LIMIT
+      player.ax *= PLAYER_ACCELERATION_LIMIT / mag
+      player.ay *= PLAYER_ACCELERATION_LIMIT / mag
+
+    @moveEntity player, dt, player.ax, player.ay, PLAYER_SPEED_LIMIT
 
   # Returns true if the bullet is now gone
   moveBullet: (bullet, dt) ->
@@ -224,6 +232,52 @@ class Game
   shrinkEnemy: (enemy) =>
     enemy.r -= ENEMY_SHRINKAGE
     return enemy.r < ENEMY_MIN_SIZE
+
+  enemyAI: (enemy) =>
+    # check if done wandering
+    if enemy.destination
+      vmag = enemy.vx * enemy.vx + enemy.vy * enemy.vy
+      dx = enemy.x - enemy.destination.x
+      dy = enemy.y - enemy.destination.y
+      if (vmag > dx * dx + dy * dy)
+        enemy.destination = undefined
+
+    closestPlayer = undefined
+    closestDistance = 100000000
+    for pid, player of @players
+      dx = enemy.x - player.x
+      dy = enemy.y - player.y
+      dist = Math.sqrt(dx * dx + dy * dy)
+      if dist < closestDistance
+        closestDistance = dist
+        closestPlayer = player
+    if (!enemy.destination && closestDistance > ENEMY_VISION_DIST)
+      x = Math.random() * @worldWidth
+      y = Math.random() * @worldHeight
+      enemy.destination = {x, y}
+    if (closestDistance < ENEMY_VISION_DIST)
+      enemy.destination = {x: closestPlayer.x, y: closestPlayer.y}
+
+      # shoot
+      if Math.random() < ENEMY_SHOOT_PERCENTAGE
+        ax = closestPlayer.x - enemy.x
+        ay = closestPlayer.y - enemy.y
+        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r
+        console.log "enemy shooting"
+
+
+  moveEnemy: (enemy, dt) =>
+    if (!enemy.destination)
+      return
+    ax = enemy.destination.x - enemy.x
+    ay = enemy.destination.y - enemy.y
+    mag = Math.sqrt(ax * ax + ay * ay)
+    if mag > ENEMY_ACCELERATION_LIMIT
+      ax *= ENEMY_ACCELERATION_LIMIT / mag
+      ay *= ENEMY_ACCELERATION_LIMIT / mag
+
+    @moveEntity enemy, dt, ax, ay, ENEMY_SPEED_LIMIT
+
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position
@@ -260,6 +314,12 @@ class Game
 
     for id in bulletsToRemove
       delete @bullets[id]
+
+    for id, enemy of @enemies
+      @enemyAI enemy
+
+    for id, enemy of @enemies
+      @moveEnemy enemy, dt
 
   loop: =>
     startTime = new Date().getTime()
