@@ -80,6 +80,7 @@ class Game
     }
     @io.sockets.emit 'state', state
 
+  SPEED_LIMIT = 300
   movePlayer: (player, dt) =>
     # Update the velocity based on the mouse
     ax = player.mouseX - player.x
@@ -114,6 +115,11 @@ class Game
       player.vx = 0
     if clampedY
       player.vy = 0
+
+    speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
+    if (speed > SPEED_LIMIT)
+      player.vx *= SPEED_LIMIT / speed;
+      player.vy *= SPEED_LIMIT / speed;
 
     return player
 
