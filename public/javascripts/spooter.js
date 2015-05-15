@@ -1,14 +1,13 @@
 // TODO remove
 window.spooter = { state:
 {
-  playerId: 0,
-  worldWidth: 640,
-  worldHeight: 480,
+  worldWidth: 1500,
+  worldHeight: 1500,
   entities: [
     { x: 100,
       y: 100,
-      vx: 10,
-      vy: 10,
+      vx: 50,
+      vy: 50,
       r: 20,
       type: "player",
       id: 0
@@ -38,13 +37,18 @@ window.spooter = { state:
       id: 3
     }
   ]
-}};
+},
+playerId: 0
+};
 
 // important stuff
 var lastms = 0;
 
 var canvas=document.getElementById("spooterCanvas");
 var ctx=canvas.getContext("2d"); 
+
+var viewportX = 0;
+var viewportY = 0;
 
 // input
 var mouseX = -1;
@@ -55,10 +59,10 @@ canvas.addEventListener('mousemove', function(evt) {
   var rect = canvas.getBoundingClientRect();
   var root = document.documentElement;
 
-  mouseX = evt.clientX - rect.left - root.scrollLeft;
-  mouseY = evt.clientY - rect.top - root.scrollTop;
+  mouseX = viewportX + evt.clientX - rect.left - root.scrollLeft;
+  mouseY = viewportY + evt.clientY - rect.top - root.scrollTop;
   window.console.log("x: " + mouseX + ", y: " + mouseY);
-  window.spoter.move(mouseX, mouseY);
+  window.spooter.move(mouseX, mouseY);
 }, false);
 
 canvas.addEventListener('click', function(evt) {
@@ -98,13 +102,31 @@ function drawCircle(x, y, radius) {
   ctx.fill();
 }
 
+function inViewport(e) {
+  if (e.x - e.r > viewportX + 640 || e.x + e.r < viewportX) return false;
+  if (e.y - e.r > viewportY + 480 || e.y + e.r < viewportY) return false;
+  return true;
+}
+
 function draw() {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, 640, 640);
   var drawState = window.spooter.state;
   for (var i = 0; i < drawState.entities.length; i++) {
+    if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
+      viewportX = Math.max(0, drawState.entities[i].x - 320);
+      viewportX = Math.min(viewportX, drawState.worldWidth - 640);
+      viewportY = Math.max(0, drawState.entities[i].y - 240);
+      viewportY = Math.min(viewportY, drawState.worldHeight - 480);
+      window.console.log("viewport: (" + viewportX + ", "  + viewportY + ")");
+      break;
+    }
+  }
+
+  for (var i = 0; i < drawState.entities.length; i++) {
+    if (!inViewport(drawState.entities[i])) continue;
     if (drawState.entities[i].type === "player") {
-      if (drawState.entities[i].id == window.spooter.state.playerId) {
+      if (drawState.entities[i].id == window.spooter.playerId) {
         ctx.fillStyle = "#FF0000";
       } else {
         ctx.fillStyle = "#FFFF00";
@@ -114,7 +136,7 @@ function draw() {
     } else {
       ctx.fillStyle = "#CC8800";
     }
-    drawCircle(drawState.entities[i].x, drawState.entities[i].y, drawState.entities[i].r);
+    drawCircle(drawState.entities[i].x - viewportX, drawState.entities[i].y - viewportY, drawState.entities[i].r);
   }
 }
 
