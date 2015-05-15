@@ -1,9 +1,11 @@
 LOOP_TIME_INTERVAL = 10
 BULLET_SPEED = 500
-PLAYER_SPEED_LIMIT = 300
+PLAYER_SPEED_LIMIT = 200
+PLAYER_ACCELERATION_LIMIT = 50
+
 MIN_ENEMIES = 15
-MAX_ENEMIES = 100
-ENEMY_SPAWN_PERCENTAGE = .05
+MAX_ENEMIES = 50
+ENEMY_SPAWN_PERCENTAGE = .001
 ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
 ENEMY_MIN_SIZE = 20
@@ -146,10 +148,16 @@ class Game
     @io.sockets.emit 'state', state
 
   movePlayer: (player, dt) =>
+    # Cap the player's acceleration
+    mag = Math.sqrt(player.ax * player.ax + player.ay * player.ay)
+    if mag > PLAYER_ACCELERATION_LIMIT
+      player.ax *= PLAYER_ACCELERATION_LIMIT / mag
+      player.ay *= PLAYER_ACCELERATION_LIMIT / mag
+
     # Update the velocity based on the mouse
     player.vx += dt * player.ax
     player.vy += dt * player.ay
-)
+
     # Update the position based on the velocity
     player.x += dt * player.vx
     player.y += dt * player.vy

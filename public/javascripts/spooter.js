@@ -1,8 +1,8 @@
 // important stuff
 var lastms = 0;
 
-var canvas=document.getElementById("spooterCanvas");
-var ctx=canvas.getContext("2d"); 
+var canvas = document.getElementById("spooterCanvas");
+var ctx = canvas.getContext("2d");
 
 var viewportX = 0;
 var viewportY = 0;
@@ -11,6 +11,13 @@ var viewportY = 0;
 var mouseX = -1;
 var mouseY = -1;
 var clicked;
+
+window.addEventListener('resize', resizeCanvas, false);
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
 
 canvas.addEventListener('mousemove', function(evt) {
   var rect = canvas.getBoundingClientRect();
@@ -67,8 +74,8 @@ function drawCircle(x, y, radius) {
 }
 
 function inViewport(e) {
-  if (e.x - e.r > viewportX + 640 || e.x + e.r < viewportX) return false;
-  if (e.y - e.r > viewportY + 480 || e.y + e.r < viewportY) return false;
+  if (e.x - e.r > viewportX + canvas.width || e.x + e.r < viewportX) return false;
+  if (e.y - e.r > viewportY + canvas.height || e.y + e.r < viewportY) return false;
   return true;
 }
 
@@ -81,12 +88,12 @@ function drawLine(x1, y1, x2, y2) {
 
 function draw() {
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, 640, 640);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   var drawState = window.spooter.state;
   for (var i = 0; i < drawState.entities.length; i++) {
     if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
-      viewportX = drawState.entities[i].x - 320;
-      viewportY = drawState.entities[i].y - 240;
+      viewportX = drawState.entities[i].x - (canvas.width >> 1);
+      viewportY = drawState.entities[i].y - (canvas.height >> 1);
       break;
     }
   }
@@ -123,5 +130,6 @@ function draw() {
   }
 }
 
+resizeCanvas();
 gameLoop();
 pollMouse();
