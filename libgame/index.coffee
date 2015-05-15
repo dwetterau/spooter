@@ -24,6 +24,8 @@ BULLET_SIZE_FACTOR = .2
 EPSILON = .001
 
 Vector = require('./vector')
+StateSerializer = require('../public/javascripts/common/state_serializer')
+serializer = new StateSerializer()
 
 class Game
 
@@ -62,7 +64,11 @@ class Game
       console.log "Player disconnected!", newPlayerId
       @deletePlayer newPlayerId
 
-    socket.emit 'initialize', {playerId: newPlayerId}
+    socket.emit 'initialize', {
+      playerId: newPlayerId,
+      worldWidth: @worldWidth
+      worldHeight: @worldHeight
+    }
 
   handleMove: (message) =>
     # Invalid message
@@ -162,11 +168,11 @@ class Game
       entities.push player
 
     state = {
-      worldWidth: @worldWidth
-      worldHeight: @worldHeight
       entities
     }
-    @io.sockets.emit 'state', state
+    serializer.setObject state
+    array = serializer.toArray()
+    @io.sockets.emit 'state', array
 
   moveEntity: (entity, dt, ax, ay, speedLimit) =>
     # Update the velocity based on the mouse
@@ -203,7 +209,7 @@ class Game
       entity.y = @worldHeight - entity.r - EPSILON
 
     if clampedX
-      entity.vx = -entity.vx
+      entity.vx = -entity.vxpackage.json
     if clampedY
       entity.vy = -entity.vy
 
@@ -330,7 +336,7 @@ class Game
         ax = closestPlayer.x - enemy.x
         ay = closestPlayer.y - enemy.y
         @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r, enemy.id
-
+        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r
 
   moveEnemy: (enemy, dt) =>
     if (!enemy.destination)
@@ -343,7 +349,6 @@ class Game
       ay *= ENEMY_ACCELERATION_LIMIT / mag
 
     @moveEntity enemy, dt, ax, ay, ENEMY_SPEED_LIMIT
-
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position

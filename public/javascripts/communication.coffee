@@ -2,11 +2,20 @@
 socket = io('http://localhost:3001') # TODO change localhost to server endpoint
 
 socket.on 'initialize', (data) ->
-  {playerId} = data
-  clearState(playerId)
+  initialize(data)
+
+serializer = null
 
 socket.on 'state', (data) ->
+  if serializer
+    serializer.setArray(new Uint8Array(data))
+    setState serializer.toObject()
+  else
+    if window.spooter.StateSerializer?
+      serializer = new window.spooter.StateSerializer()
+  ###
   setState data
+  ###
 
 move = (mouseX, mouseY) ->
   playerId = getPlayerId()
@@ -19,9 +28,13 @@ shoot = ->
 getPlayerId = ->
   return window.spooter.playerId
 
-clearState = (playerId) ->
+initialize = (data) ->
+  {worldHeight, worldWidth, playerId} = data
   window.spooter.state = {}
   window.spooter.playerId = playerId
+  window.spooter.worldHeight = worldHeight
+  window.spooter.worldWidth = worldWidth
+
   window.spooter.initialized = false
 
 setState = (newState) ->
