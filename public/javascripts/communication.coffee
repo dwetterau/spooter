@@ -8,7 +8,7 @@ serializer = null
 
 socket.on 'state', (data) ->
   if serializer
-    setState serializer.toObject(data)
+    setState serializer.toObject(data, window.spooter.state.newState)
   else
     if window.spooter.StateSerializer?
       serializer = new window.spooter.StateSerializer()
@@ -26,15 +26,37 @@ getPlayerId = ->
 
 initialize = (data) ->
   {worldHeight, worldWidth, playerId} = data
-  window.spooter.state = {}
+  window.spooter.state = {
+    drawState: {}
+    newState: {}
+  }
   window.spooter.playerId = playerId
   window.spooter.worldHeight = worldHeight
   window.spooter.worldWidth = worldWidth
 
   window.spooter.initialized = false
 
+lastStateReceivedTime = 0
+totalStateTime = 0
+numStateUpdates = 0.0
 setState = (newState) ->
-  window.spooter.state = newState
+  now = new Date().getTime()
+  if lastStateReceivedTime != 0
+    time = now - lastStateReceivedTime
+    totalStateTime += time
+    numStateUpdates++
+    if Math.random() < .001
+      console.log "Average state update interval", (totalStateTime / numStateUpdates)
+  lastStateReceivedTime = now
+
+  # Swap the state pointers
+  oldState = window.spooter.state.drawState
+  window.spooter.state.drawState = newState
+  window.spooter.state.newState = oldState
+
   window.spooter.initialized = true
 
-window.spooter = {initialized: false, move, shoot, state: {}}
+window.spooter = {initialized: false, move, shoot, state: {
+  drawState: {}
+  newState: {}
+}}

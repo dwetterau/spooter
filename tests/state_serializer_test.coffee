@@ -10,6 +10,7 @@ describe 'StateSerializer', ->
   describe 'state serialization', ->
     it 'should convert state without entities back and forth', ->
       object = {
+        numEntities: 0
         entities: []
       }
       array = serializer.toArray(object)
@@ -17,12 +18,13 @@ describe 'StateSerializer', ->
       # Should only have 4 bytes with the length
       assert.equal array.byteLength, 4
 
-      convertedObject = serializer.toObject(array)
+      convertedObject = serializer.toObject(array, {})
 
       assert.equal JSON.stringify(object), JSON.stringify(convertedObject)
 
     it 'should convert state with some entities back and forth', ->
       object = {
+        numEntities: 3
         entities: [
           {
             x: 0.0
@@ -54,11 +56,11 @@ describe 'StateSerializer', ->
         ]
       }
 
-      #array = serializer.toArray(object)
+      array = serializer.toArray(object)
 
-      # Should only have 4 + (24 * 3) bytes
-      #assert.equal array.byteLength, 4 + (28 * 3)
+      # Should only have 4 + (28 * 3) bytes
+      assert.equal array.byteLength, 4 + (28 * 3)
 
-      #convertedObject = serializer.toObject(array)
+      convertedObject = serializer.toObject(array, {})
 
-      #assert.equal JSON.stringify(object), JSON.stringify(convertedObject)
+      assert.equal JSON.stringify(object), JSON.stringify(convertedObject)

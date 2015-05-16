@@ -32,14 +32,18 @@ class StateSerializer
 
     return buffer
 
-  toObject: (arrayBuffer) ->
+  toObject: (arrayBuffer, object) ->
     floatView = new Float32Array(arrayBuffer)
     intView = new Int32Array(arrayBuffer)
 
     # get the number of entities out of the buffer first
     offset = 0
     numEntities = intView[offset++]
-    entities = new Array(numEntities)
+    object.numEntities = numEntities
+    if not object.entities?
+      object.entities = new Array(numEntities)
+
+    entities = object.entities
     for i in [0...numEntities]
       x = floatView[offset++]
       y = floatView[offset++]
@@ -53,7 +57,7 @@ class StateSerializer
       entities[i] = {
         x, y, vx, vy, r, id, type
       }
-    return {entities}
+    return object
 
   _typeToInt: (type) ->
     integer = -1

@@ -40,26 +40,33 @@ function pollMouse() {
 }
 
 // updating state
-
+totalMSDif = 0.0;
+numMSDif = 0;
 function gameLoop() {
   var curms = new Date().getTime();
   if (lastms == 0) {
     lastms = curms;
   }
   var msdif = curms - lastms;
+  totalMSDif += msdif;
+  numMSDif++;
+  if (Math.random() < .0001) {
+      console.log("Average Time between frames", (totalMSDif / numMSDif));
+  }
+
   lastms = curms;
 
   if (window.spooter.initialized) {
     update(msdif);
     draw();
   }
-  setTimeout(gameLoop, 5);
+  setTimeout(gameLoop, 1);
 }
 
 // basically move objects along their velocity
 function update(framems) {
-  var updateState = window.spooter.state;
-  for (var i = 0; i < updateState.entities.length; i++) {
+  var updateState = window.spooter.state.drawState;
+  for (var i = 0; i < updateState.numEntities; i++) {
     updateState.entities[i].x += updateState.entities[i].vx * framems/1000.0;
     updateState.entities[i].y += updateState.entities[i].vy * framems/1000.0;
   }
@@ -94,8 +101,8 @@ function drawLine(x1, y1, x2, y2) {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  var drawState = window.spooter.state;
-  for (var i = 0; i < drawState.entities.length; i++) {
+  var drawState = window.spooter.state.drawState;
+  for (var i = 0; i < drawState.numEntities; i++) {
     if (drawState.entities[i].type === "player" && drawState.entities[i].id == window.spooter.playerId) {
       viewportX = drawState.entities[i].x - (canvas.width >> 1);
       viewportY = drawState.entities[i].y - (canvas.height >> 1);
@@ -120,7 +127,7 @@ function draw() {
   endDrawLine();
 
   // draw entities
-  for (var i = 0; i < drawState.entities.length; i++) {
+  for (var i = 0; i < drawState.numEntities; i++) {
     if (!inViewport(drawState.entities[i])) continue;
     if (drawState.entities[i].type === "player") {
       if (drawState.entities[i].id == window.spooter.playerId) {
