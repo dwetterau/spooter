@@ -13,9 +13,9 @@ socket.on 'state', (data) ->
     if window.spooter.StateSerializer?
       serializer = new window.spooter.StateSerializer()
 
-move = (mouseX, mouseY) ->
+move = (ax, ay) ->
   playerId = getPlayerId()
-  socket.emit("move", {playerId, mouseX, mouseY})
+  socket.emit("move", {playerId, ax, ay})
 
 shoot = ->
   playerId = getPlayerId()

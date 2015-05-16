@@ -75,13 +75,16 @@ class Game
     if not message? or not message.playerId?
       return
 
-    {mouseX, mouseY, playerId} = message
-    if not mouseX? or not mouseY? or playerId not of @players
+    {ax, ay, playerId} = message
+    #{mouseX, mouseY, playerId} = message
+    if not ax? or not ay? or playerId not of @players
       return
 
     player = @players[playerId]
-    player.ax = mouseX - player.x
-    player.ay = mouseY - player.y
+    player.ax = ax
+    player.ay = ay
+    #player.ax = mouseX - player.x
+    #player.ay = mouseY - player.y
 
   handleShoot: (message) =>
     if not message? or not message.playerId?

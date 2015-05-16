@@ -3,5 +3,7 @@ node_modules/
 *.DS_Store
 *.swp
 libgame/*.js*
+public/javascripts/communication.js
+public/javascripts/communication.js.map
 tests/*.js*
 public/javascripts/common/*.js*

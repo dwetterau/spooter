@@ -10,6 +10,8 @@ var viewportY = 0;
 // input
 var mouseX = -1;
 var mouseY = -1;
+var lastAx = 0;
+var lastAy = 0;
 var clicked;
 
 window.addEventListener('resize', resizeCanvas, false);
@@ -33,8 +35,26 @@ canvas.addEventListener('click', function(evt) {
 }, false);
 
 function pollMouse() {
-  if (mouseX >= 0 && mouseY >= 0) {
-    window.spooter.move(viewportX + mouseX, viewportY + mouseY);
+  if (mouseX >= 0 && mouseY >= 0 && window.spooter.state.drawState) {
+    p = undefined;
+    for (i = 0; i < window.spooter.state.drawState.numEntities; i++) {
+      entity = window.spooter.state.drawState.entities[i];
+      if (window.spooter.playerId == entity.id && entity.type == "player") {
+        p = window.spooter.state.drawState.entities[i];
+        break;
+      }
+    }
+    if (p) {
+      ax = viewportX + mouseX - p.x;
+      ay = viewportY + mouseY - p.y;
+
+      if (ax != lastAx || ay != lastAy) {
+        lastAx = ax;
+        lastAy = ay;
+        window.spooter.move(ax, ay);
+      }
+      //window.spooter.move(viewportX + mouseX, viewportY + mouseY);
+    }
   }
   setTimeout(pollMouse, 10);
 }
