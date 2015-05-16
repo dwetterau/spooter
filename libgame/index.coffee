@@ -170,8 +170,7 @@ class Game
     state = {
       entities
     }
-    serializer.setObject state
-    array = serializer.toArray()
+    array = serializer.toArray(state)
     @io.sockets.emit 'state', array
 
   moveEntity: (entity, dt, ax, ay, speedLimit) =>

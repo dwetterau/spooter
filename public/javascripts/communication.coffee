@@ -8,14 +8,10 @@ serializer = null
 
 socket.on 'state', (data) ->
   if serializer
-    serializer.setArray(new Uint8Array(data))
-    setState serializer.toObject()
+    setState serializer.toObject(data)
   else
     if window.spooter.StateSerializer?
       serializer = new window.spooter.StateSerializer()
-  ###
-  setState data
-  ###
 
 move = (mouseX, mouseY) ->
   playerId = getPlayerId()

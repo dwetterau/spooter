@@ -12,17 +12,12 @@
 
   socket.on('state', function(data) {
     if (serializer) {
-      serializer.setArray(new Uint8Array(data));
-      return setState(serializer.toObject());
+      return setState(serializer.toObject(data));
     } else {
       if (window.spooter.StateSerializer != null) {
         return serializer = new window.spooter.StateSerializer();
       }
     }
-
-    /*
-    setState data
-     */
   });
 
   move = function(mouseX, mouseY) {

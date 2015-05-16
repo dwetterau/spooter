@@ -7,68 +7,17 @@ describe 'StateSerializer', ->
   before ->
     serializer = new StateSerializer()
 
-  describe 'integer conversion', ->
-    it 'should convert integers to 4 bytes and back', ->
-      testNumber = (number) ->
-        bytes = serializer._intToBytes number, 4
-        convertedNumber = serializer._bytesToInt bytes, 4
-        assert.equal bytes.length, 4
-        assert.equal number, convertedNumber
-
-      testNumber 0x7ABBCCDD
-      testNumber 0x00BBCCDD
-      testNumber 0x7ABBCC00
-      testNumber 0x00000000
-
-    it 'should convert integers to 3 bytes and back', ->
-      testNumber = (number) ->
-        bytes = serializer._intToBytes number, 3
-        convertedNumber = serializer._bytesToInt bytes, 3
-        assert.equal bytes.length, 3
-        assert.equal number, convertedNumber
-
-      testNumber 0x7ABBCC
-      testNumber 0x00BBCC
-      testNumber 0x7ABBCC
-      testNumber 0x000000
-
-    it 'should convert integers to 1 byte and back', ->
-      testNumber = (number) ->
-        bytes = serializer._intToBytes number, 1
-        convertedNumber = serializer._bytesToInt bytes, 1
-        assert.equal bytes.length, 1
-        assert.equal number, convertedNumber
-
-      testNumber 0x7A
-      testNumber 0xBB
-      testNumber 0x01
-      testNumber 0x00
-
-  describe 'float conversion', ->
-    it 'should convert floats to bytes and back', ->
-      testNumber = (number) ->
-        number = parseFloat number
-        bytes = serializer._floatToBytes number
-        convertedNumber = serializer._bytesToFloat bytes
-        assert Math.abs((number - convertedNumber) / convertedNumber) < 1e-5
-
-      testNumber 12345.12134
-      testNumber 1e32
-      testNumber 2.5
-
   describe 'state serialization', ->
     it 'should convert state without entities back and forth', ->
       object = {
         entities: []
       }
-      serializer.setObject object
-      array = serializer.toArray()
+      array = serializer.toArray(object)
 
       # Should only have 4 bytes with the length
       assert.equal array.byteLength, 4
 
-      serializer.setArray array
-      convertedObject = serializer.toObject()
+      convertedObject = serializer.toObject(array)
 
       assert.equal JSON.stringify(object), JSON.stringify(convertedObject)
 
@@ -105,13 +54,11 @@ describe 'StateSerializer', ->
         ]
       }
 
-      serializer.setObject object
-      array = serializer.toArray()
+      #array = serializer.toArray(object)
 
       # Should only have 4 + (24 * 3) bytes
-      assert.equal array.byteLength, 4 + (24 * 3)
+      #assert.equal array.byteLength, 4 + (28 * 3)
 
-      serializer.setArray array
-      convertedObject = serializer.toObject()
+      #convertedObject = serializer.toObject(array)
 
-      assert.equal JSON.stringify(object), JSON.stringify(convertedObject)
+      #assert.equal JSON.stringify(object), JSON.stringify(convertedObject)
