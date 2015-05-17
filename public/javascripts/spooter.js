@@ -138,16 +138,16 @@ function draw() {
   ctx.strokeStyle = "#808080";
   var gridWidth = 100;
   startDrawLine();
-  for (var i = gridWidth; i < window.spooter.worldWidth; i += gridWidth) {
+  for (i = gridWidth; i < window.spooter.worldWidth; i += gridWidth) {
     drawLine(-viewportX, i - viewportY, window.spooter.worldHeight - viewportX, i - viewportY);
   }
-  for (var i = gridWidth; i < window.spooter.worldHeight; i+= gridWidth) {
+  for (i = gridWidth; i < window.spooter.worldHeight; i+= gridWidth) {
     drawLine(i - viewportX, -viewportY, i - viewportX, window.spooter.worldWidth - viewportY);
   }
   endDrawLine();
 
   // draw entities
-  for (var i = 0; i < drawState.numEntities; i++) {
+  for (i = 0; i < drawState.numEntities; i++) {
     if (!inViewport(drawState.entities[i])) continue;
     if (drawState.entities[i].type === "player") {
       if (drawState.entities[i].id == window.spooter.playerId) {

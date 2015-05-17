@@ -20,13 +20,13 @@
     }
   });
 
-  move = function(mouseX, mouseY) {
+  move = function(ax, ay) {
     var playerId;
     playerId = getPlayerId();
     return socket.emit("move", {
       playerId: playerId,
-      mouseX: mouseX,
-      mouseY: mouseY
+      ax: ax,
+      ay: ay
     });
   };
 

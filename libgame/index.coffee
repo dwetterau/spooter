@@ -42,6 +42,13 @@ class Game
     @bullets = {}
     @nextBulletId = 0
 
+    @entities = []
+    @numEntities = 0
+    @typeMap =
+      player: @players
+      enemy: @enemies
+      bullet: @bullets
+
     @io = null
 
   # Attach all the proper listeners to io
@@ -62,7 +69,8 @@ class Game
     socket.on "shoot", @handleShoot
     socket.on "disconnect", =>
       console.log "Player disconnected!", newPlayerId
-      @deletePlayer newPlayerId
+      if newPlayerId of @players
+        @deleteEntity newPlayerId, @players
 
     socket.emit 'initialize', {
       playerId: newPlayerId,
@@ -80,7 +88,7 @@ class Game
     if not ax? or not ay? or playerId not of @players
       return
 
-    player = @players[playerId]
+    player = @entities[@players[playerId]]
     player.ax = ax
     player.ay = ay
     #player.ax = mouseX - player.x
@@ -94,7 +102,7 @@ class Game
     if playerId not of @players
       return
 
-    p = @players[playerId]
+    p = @entities[@players[playerId]]
     {x, y} = p
     vx = p.ax
     vy = p.ay
@@ -104,7 +112,7 @@ class Game
   createPlayer: (playerId) ->
     x = Math.random() * @worldWidth
     y = Math.random() * @worldHeight
-    @players[playerId] = {
+    player = {
       type: 'player'
       id: playerId
       r: 20
@@ -115,6 +123,7 @@ class Game
       ax: 0
       ay: 0
     }
+    @createEntity(playerId, @players, player)
 
   createBullet: (x, y, vx, vy, ownerType, ownerR, ownerId) =>
     id = @nextBulletId++
@@ -132,7 +141,7 @@ class Game
     vx *= BULLET_MIN_SIZE / r
     vy *= BULLET_MIN_SIZE / r
 
-    @bullets[id] = {
+    bullet = {
       type: 'bullet'
       id
       r
@@ -143,6 +152,7 @@ class Game
       ownerType
       ownerId
     }
+    @createEntity(id, @bullets, bullet)
 
   createEnemy: =>
     r = parseInt(Math.random() * ENEMY_SIZE_RANGE) + ENEMY_MIN_SIZE
@@ -155,23 +165,35 @@ class Game
 
     id = @nextEnemyId++
 
-    @enemies[id] = {type: 'enemy', id, r, x, y, vx, vy}
+    enemy = {type: 'enemy', id, r, x, y, vx, vy}
+    @createEntity(id, @enemies, enemy)
 
-  deletePlayer: (playerId) =>
-    if playerId of @players
-      delete @players[playerId]
+  createEntity: (id, map, entity) ->
+    newIndex = @numEntities++
+    @entities[newIndex] = entity
+    map[id] = newIndex
+
+  deleteEntity: (id, map) ->
+    @numEntities--
+    holeIndex = map[id]
+
+    # We don't need to swap if the last thing we added was removed
+    if @numEntities != holeIndex
+      # Swap the last entity into the hole
+      entity = @entities[@numEntities]
+      @entities[holeIndex] = entity
+      delete @entities[@numEntities]
+
+      # Repair the mapping after the swap
+      holeMap = @typeMap[entity.type]
+      holeMap[entity.id] = holeIndex
+
+    delete map[id]
 
   broadcastState: =>
-    entities = []
-    for id, bullet of @bullets
-      entities.push bullet
-    for id, enemy of @enemies
-      entities.push enemy
-    for id, player of @players
-      entities.push player
-
     state = {
-      entities
+      numEntities: @numEntities
+      entities: @entities
     }
     array = serializer.toArray(state)
     @io.sockets.emit 'state', array
@@ -297,6 +319,13 @@ class Game
     e2.vx = v2.a
     e2.vy = v2.b
 
+  growPlayer: (playerId) =>
+    player = @entities[@players[playerId]]
+    player.r = Math.min(
+      PLAYER_GROWAGE + player.r,
+      PLAYER_MAX_SIZE
+    )
+
   shrinkEntity: (entity, bullet) =>
     er2 = entity.r * entity.r
     br2 = bullet.r * bullet.r * 10
@@ -319,7 +348,8 @@ class Game
 
     closestPlayer = undefined
     closestDistance = 100000000
-    for pid, player of @players
+    for pid, playerIndex of @players
+      player = @entities[playerIndex]
       dx = enemy.x - player.x
       dy = enemy.y - player.y
       dist = Math.sqrt(dx * dx + dy * dy)
@@ -354,23 +384,25 @@ class Game
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position
-    for id of @players
-      @movePlayer @players[id], dt
+    for id, index of @players
+      @movePlayer @entities[index], dt
 
     bulletsToRemove = []
-    for id of @bullets
-      if @moveBullet @bullets[id], dt
+    for id, index of @bullets
+      if @moveBullet @entities[index], dt
         bulletsToRemove.push id
 
     for id in bulletsToRemove
-      delete @bullets[id]
+      @deleteEntity(id, @bullets)
 
     # Process the bullet collisions
-    enemiesToDelete = []
+    enemiesToDelete = {}
     bulletsToRemove = []
-    for id, bullet of @bullets
+    for id, index of @bullets
+      bullet = @entities[index]
       if bullet.ownerType == 'player'
-        for eid, enemy of @enemies
+        for eid, enemyIndex of @enemies
+          enemy = @entities[enemyIndex]
           if eid of enemiesToDelete
             continue
 
@@ -379,32 +411,34 @@ class Game
             if @shrinkEntity enemy, bullet
               enemiesToDelete[eid] = true
               if bullet.ownerId of @players
-                @players[bullet.ownerId].r = Math.min(PLAYER_GROWAGE + @players[bullet.ownerId].r, PLAYER_MAX_SIZE)
+                @growPlayer bullet.ownerId
       else if bullet.ownerType == 'enemy'
-        for pid, player of @players
+        for pid, playerIndex of @players
+          player = @entities[playerIndex]
           if @collides player, bullet
             bulletsToRemove.push id
             if @shrinkEntity player, bullet
               # player died
-              id = player.id
-              delete @players[id]
-              @createPlayer(id)
+              @deleteEntity(pid, @players)
+              @createPlayer(pid)
 
-    for eid of enemiesToDelete
-      delete @enemies[eid]
+    for id of enemiesToDelete
+      @deleteEntity(id, @enemies)
 
     for id in bulletsToRemove
-      delete @bullets[id]
+      @deleteEntity(id, @bullets)
 
-    for id, enemy of @enemies
-      @enemyAI enemy
+    for id, index of @enemies
+      @enemyAI @entities[index]
 
-    for id, enemy of @enemies
-      @moveEnemy enemy, dt
+    for id, index of @enemies
+      @moveEnemy @entities[index], dt
 
     # Process the player to enemy collisions
-    for pid, player of @players
-      for eid, enemy of @enemies
+    for pid, playerIndex of @players
+      player = @entities[playerIndex]
+      for eid, enemyIndex of @enemies
+        enemy = @entities[enemyIndex]
         if @collides enemy, player
           @bounceCollision enemy, player
 

@@ -9,7 +9,7 @@ class StateSerializer
   #     4 byte for type
 
   toArray: (object) ->
-    numEntities = object.entities.length;
+    numEntities = object.numEntities;
     size = 4 + (28 * numEntities)
     buffer = new ArrayBuffer(size)
     floatView = new Float32Array(buffer)
@@ -20,7 +20,8 @@ class StateSerializer
     intView[offset++] = numEntities
 
     # Convert each entity to the packed form
-    for entity in object.entities
+    for i in [0...numEntities]
+      entity = object.entities[i]
       floatView[offset++] = entity.x
       floatView[offset++] = entity.y
       floatView[offset++] = entity.vx
