@@ -1,6 +1,6 @@
 LOOP_TIME_INTERVAL = 10
 MAX_BULLET_SPEED = 500
-PLAYER_SPEED_LIMIT = 200
+PLAYER_SPEED_LIMIT = 500
 PLAYER_ACCELERATION_LIMIT = 200
 PLAYER_SHRINKAGE = 2
 PLAYER_GROWAGE = 10
@@ -13,7 +13,7 @@ ENEMY_SPAWN_PERCENTAGE = .001
 ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
 ENEMY_MIN_SIZE = 20
-ENEMY_SPEED_LIMIT = 120
+ENEMY_SPEED_LIMIT = 300
 ENEMY_ACCELERATION_LIMIT = 100
 ENEMY_VISION_DIST = 250
 ENEMY_SHOOT_PERCENTAGE = .003
@@ -107,7 +107,7 @@ class Game
     vx = p.ax
     vy = p.ay
 
-    @createBullet x, y, vx, vy, p.type, p.r, p.id
+    @createBullet x, y, vx, vy, p
 
   createPlayer: (playerId) ->
     x = Math.random() * @worldWidth
@@ -125,7 +125,7 @@ class Game
     }
     @createEntity(playerId, @players, player)
 
-  createBullet: (x, y, vx, vy, ownerType, ownerR, ownerId) =>
+  createBullet: (x, y, vx, vy, owner) =>
     id = @nextBulletId++
     mag = Math.sqrt(vx * vx + vy * vy)
 
@@ -136,10 +136,14 @@ class Game
     vx *= MAX_BULLET_SPEED / mag
     vy *= MAX_BULLET_SPEED / mag
 
-    r = Math.max(BULLET_MIN_SIZE, Math.round(ownerR * BULLET_SIZE_FACTOR))
+    r = Math.max(BULLET_MIN_SIZE, Math.round(owner.r * BULLET_SIZE_FACTOR))
 
     vx *= BULLET_MIN_SIZE / r
     vy *= BULLET_MIN_SIZE / r
+
+    # Add the launching vector for realistic bullet physics
+    vx += owner.vx
+    vy += owner.vy
 
     bullet = {
       type: 'bullet'
@@ -149,8 +153,8 @@ class Game
       y
       vx
       vy
-      ownerType
-      ownerId
+      ownerType: owner.type
+      ownerId: owner.id
     }
     @createEntity(id, @bullets, bullet)
 
@@ -244,7 +248,8 @@ class Game
       player.ax *= PLAYER_ACCELERATION_LIMIT / mag
       player.ay *= PLAYER_ACCELERATION_LIMIT / mag
 
-    @moveEntity player, dt, player.ax, player.ay, PLAYER_SPEED_LIMIT
+    @moveEntity player, dt, player.ax, player.ay, (
+      PLAYER_SPEED_LIMIT * (PLAYER_MIN_SIZE / player.r))
 
   # Returns true if the bullet is now gone
   moveBullet: (bullet, dt) ->
@@ -346,8 +351,8 @@ class Game
       if (vmag > dx * dx + dy * dy)
         enemy.destination = undefined
 
-    closestPlayer = undefined
-    closestDistance = 100000000
+    closestPlayer = null
+    closestDistance = Number.MAX_VALUE
     for pid, playerIndex of @players
       player = @entities[playerIndex]
       dx = enemy.x - player.x
@@ -356,22 +361,22 @@ class Game
       if dist < closestDistance
         closestDistance = dist
         closestPlayer = player
-    if (!enemy.destination && closestDistance > ENEMY_VISION_DIST)
+    if !enemy.destination && closestPlayer && (
+      closestDistance > ENEMY_VISION_DIST + closestPlayer.r + enemy.r)
       x = Math.random() * @worldWidth
       y = Math.random() * @worldHeight
       enemy.destination = {x, y}
-    if (closestDistance < ENEMY_VISION_DIST)
+    if closestDistance < ENEMY_VISION_DIST
       enemy.destination = {x: closestPlayer.x, y: closestPlayer.y}
 
       # shoot
       if Math.random() < ENEMY_SHOOT_PERCENTAGE
         ax = closestPlayer.x - enemy.x
         ay = closestPlayer.y - enemy.y
-        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r, enemy.id
-        @createBullet enemy.x, enemy.y, ax, ay, enemy.type, enemy.r
+        @createBullet enemy.x, enemy.y, ax, ay, enemy
 
   moveEnemy: (enemy, dt) =>
-    if (!enemy.destination)
+    if !enemy.destination
       return
     ax = enemy.destination.x - enemy.x
     ay = enemy.destination.y - enemy.y
@@ -380,7 +385,8 @@ class Game
       ax *= ENEMY_ACCELERATION_LIMIT / mag
       ay *= ENEMY_ACCELERATION_LIMIT / mag
 
-    @moveEntity enemy, dt, ax, ay, ENEMY_SPEED_LIMIT
+    @moveEntity enemy, dt, ax, ay, (
+      ENEMY_SPEED_LIMIT * (ENEMY_MIN_SIZE / enemy.r))
 
   doPhysics: (dt) =>
     # Start by iterating through all of the players and updating their position
