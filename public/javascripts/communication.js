@@ -21,13 +21,18 @@
   });
 
   move = function(ax, ay) {
-    var playerId;
+    var angle, buffer, byteView, playerId;
     playerId = getPlayerId();
-    return socket.emit("move", {
-      playerId: playerId,
-      ax: ax,
-      ay: ay
-    });
+    angle = -Math.atan2(ay, ax);
+    if (angle < 0) {
+      angle += Math.PI * 2;
+    }
+    angle = Math.round(angle / ((2 * Math.PI) / 255));
+    buffer = new ArrayBuffer(2);
+    byteView = new Uint8Array(buffer);
+    byteView[0] = playerId;
+    byteView[1] = angle;
+    return socket.emit("move", buffer);
   };
 
   shoot = function() {

@@ -15,7 +15,18 @@ socket.on 'state', (data) ->
 
 move = (ax, ay) ->
   playerId = getPlayerId()
-  socket.emit("move", {playerId, ax, ay})
+  # Convert the x and y components into an angle
+  angle = -Math.atan2(ay, ax)
+  if angle < 0
+    angle += Math.PI * 2
+  angle = Math.round(angle / ((2 * Math.PI) / 255))
+
+  buffer = new ArrayBuffer(2)
+  byteView = new Uint8Array(buffer)
+  byteView[0] = playerId
+  byteView[1] = angle
+
+  socket.emit("move", buffer)
 
 shoot = ->
   playerId = getPlayerId()

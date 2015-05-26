@@ -1,7 +1,7 @@
 LOOP_TIME_INTERVAL = 10
 MAX_BULLET_SPEED = 500
 PLAYER_SPEED_LIMIT = 500
-PLAYER_ACCELERATION_LIMIT = 200
+PLAYER_ACCELERATION = 200
 PLAYER_SHRINKAGE = 2
 PLAYER_GROWAGE = 10
 PLAYER_MIN_SIZE = 15
@@ -78,21 +78,25 @@ class Game
       worldHeight: @worldHeight
     }
 
-  handleMove: (message) =>
+  handleMove: (buffer) =>
     # Invalid message
-    if not message? or not message.playerId?
+    if not buffer?
       return
 
-    {ax, ay, playerId} = message
-    #{mouseX, mouseY, playerId} = message
+    byteView = new Uint8Array(buffer)
+    playerId = byteView[0]
+    angle = byteView[1]
+
+    angle *= (2 * Math.PI) / 255
+    ax = Math.cos(angle)
+    ay = -Math.sin(angle)
+
     if not ax? or not ay? or playerId not of @players
       return
 
     player = @entities[@players[playerId]]
     player.ax = ax
     player.ay = ay
-    #player.ax = mouseX - player.x
-    #player.ay = mouseY - player.y
 
   handleShoot: (message) =>
     if not message? or not message.playerId?
@@ -243,12 +247,10 @@ class Game
 
   movePlayer: (player, dt) =>
     # Cap the player's acceleration
-    mag = Math.sqrt player.ax * player.ax + player.ay * player.ay
-    if mag > PLAYER_ACCELERATION_LIMIT
-      player.ax *= PLAYER_ACCELERATION_LIMIT / mag
-      player.ay *= PLAYER_ACCELERATION_LIMIT / mag
+    ax = player.ax * PLAYER_ACCELERATION
+    ay = player.ay * PLAYER_ACCELERATION
 
-    @moveEntity player, dt, player.ax, player.ay, (
+    @moveEntity player, dt, ax, ay, (
       PLAYER_SPEED_LIMIT * (PLAYER_MIN_SIZE / player.r))
 
   # Returns true if the bullet is now gone
