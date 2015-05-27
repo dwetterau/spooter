@@ -56,7 +56,7 @@
         break;
       }
     }
-    if (!leftIndex) {
+    if (leftIndex === null) {
       return null;
     }
     rightIndex = (leftIndex + 1) % window.spooter.STATE_BUFFER_SIZE;
@@ -103,7 +103,7 @@
   initialize = function(data) {
     var playerId, worldHeight, worldWidth;
     worldHeight = data.worldHeight, worldWidth = data.worldWidth, playerId = data.playerId;
-    window.spooter.STATE_BUFFER_SIZE = 50;
+    window.spooter.STATE_BUFFER_SIZE = 8;
     window.spooter.states = new Array(window.spooter.STATE_BUFFER_SIZE);
     window.spooter.stateTimes = new Array(window.spooter.STATE_BUFFER_SIZE);
     window.spooter.stateBufferIndex = -1;

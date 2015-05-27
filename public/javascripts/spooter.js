@@ -15,7 +15,8 @@ var lastAy = 0;
 var clicked;
 
 // The amount in milliseconds clients are forced to be behind
-var FORCED_DELAY = 50;
+// Three state updates + 3 frames
+var FORCED_DELAY = 200;
 
 window.addEventListener('resize', resizeCanvas, false);
 

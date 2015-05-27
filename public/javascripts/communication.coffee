@@ -41,7 +41,7 @@ getStatesToInterpolate = (time) ->
       break
 
   # If we didn't find some enclosing states, exit
-  if not leftIndex
+  if leftIndex is null
     return null
 
   rightIndex = (leftIndex + 1) % window.spooter.STATE_BUFFER_SIZE
@@ -80,7 +80,7 @@ getPlayerId = ->
 
 initialize = (data) ->
   {worldHeight, worldWidth, playerId} = data
-  window.spooter.STATE_BUFFER_SIZE = 50;
+  window.spooter.STATE_BUFFER_SIZE = 8;
   window.spooter.states = new Array(window.spooter.STATE_BUFFER_SIZE)
   window.spooter.stateTimes = new Array(window.spooter.STATE_BUFFER_SIZE)
   window.spooter.stateBufferIndex = -1
