@@ -117,6 +117,21 @@ function gameLoop() {
 }
 
 stop = false;
+
+// Performs Hermite Interpolation between the two points given their
+// first derivatives. Note velocity is in pixels / second so we need
+// to convert it to ms here.
+function hermiteInterpolation(p0, p1, v0, v1, t0, t1, t) {
+  var a = p0;
+  var b = v0 / 1000.0;
+  var h = t1 - t0;
+  var c = (p1 - a - (b * h)) / (h * h);
+  var d = ((v1 / 1000.0) - b - (2 * c * h)) / (h * h);
+  var e = t - t0;
+  var ee = e * e;
+  return a + b * e + c * (ee) + d * (ee * (t - t1));
+}
+
 // Interpolate the positions of each entity between the two given states
 function update(drawTime) {
   object = window.spooter.getStatesToInterpolate(drawTime);
@@ -143,13 +158,17 @@ function update(drawTime) {
       var leftEntity = leftEntityMap[entity.id + entity.type];
       // An updated entity, interpolate between the two states
       var x0 = leftEntity.x;
-      var y0 = leftEntity.y;
+      var vx0 = leftEntity.vx;
       var x1 = entity.x;
+      var vx1 = entity.vx;
+
+      var y0 = leftEntity.y;
+      var vy0 = leftEntity.vy;
       var y1 = entity.y;
-      newEntity.x = (x1 - x0) / (t1 - t0) * (drawTime - t0) + x0;
-      newEntity.y = (y1 - y0) / (t1 - t0) * (drawTime - t0) + y0;
-      if (entity.id == 0) {
-      }
+      var vy1 = entity.vy;
+
+      newEntity.x = hermiteInterpolation(x0, x1, vx0, vx1, t0, t1, drawTime);
+      newEntity.y = hermiteInterpolation(y0, y1, vy0, vy1, t0, t1, drawTime);
     }
     interpolatedState.entities[i] = newEntity;
   }
