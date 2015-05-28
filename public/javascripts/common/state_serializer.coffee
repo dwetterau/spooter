@@ -2,58 +2,64 @@ class StateSerializer
   constructor: ->
 
   # Serialized format:
-  #   4 byte int -> number of entities
-  #  28 bytes for each entity:
-  #     4 byte floats for x, y, vx, vy, r
-  #     4 byte int for id
-  #     4 byte for type
+  #   2 byte int -> number of entities
+  #  12 bytes for each entity:
+  #     2x2 byte integers for x, y,
+  #     2x2 byte integers for vx, vy
+  #     2 byte int for id
+  #     1 byte integer for r
+  #     1 byte int for type
 
   toArray: (object) ->
     numEntities = object.numEntities;
-    size = 4 + (28 * numEntities)
+    size = 2 + (12 * numEntities)
     buffer = new ArrayBuffer(size)
-    floatView = new Float32Array(buffer)
-    intView = new Int32Array(buffer)
+    uint16View = new Uint16Array(buffer)
+    int16View = new Int16Array(buffer)
+    uint8View = new Uint8Array(buffer)
 
     # Write in the number of entities first
     offset = 0
-    intView[offset++] = numEntities
+    uint16View[offset++] = numEntities
 
     # Convert each entity to the packed form
     for i in [0...numEntities]
       entity = object.entities[i]
-      floatView[offset++] = entity.x
-      floatView[offset++] = entity.y
-      floatView[offset++] = entity.vx
-      floatView[offset++] = entity.vy
-      floatView[offset++] = entity.r
+      uint16View[offset++] = entity.x
+      uint16View[offset++] = entity.y
+      int16View[offset++] = entity.vx
+      int16View[offset++] = entity.vy
 
-      intView[offset++] = entity.id
-      intView[offset++] = @_typeToInt entity.type
+      uint16View[offset++] = entity.id
+      uint8View[offset << 1] = entity.r
+      uint8View[(offset << 1) + 1] = @_typeToInt entity.type
+      offset++
 
     return buffer
 
   toObject: (arrayBuffer, object) ->
-    floatView = new Float32Array(arrayBuffer)
-    intView = new Int32Array(arrayBuffer)
+    uint16View = new Uint16Array(arrayBuffer)
+    int16View = new Int16Array(arrayBuffer)
+    uint8View = new Uint8Array(arrayBuffer)
 
     # get the number of entities out of the buffer first
     offset = 0
-    numEntities = intView[offset++]
+    numEntities = uint16View[offset++]
     object.numEntities = numEntities
     if not object.entities?
       object.entities = new Array(numEntities)
 
     entities = object.entities
     for i in [0...numEntities]
-      x = floatView[offset++]
-      y = floatView[offset++]
-      vx = floatView[offset++]
-      vy = floatView[offset++]
-      r = floatView[offset++]
+      x = uint16View[offset++]
+      y = uint16View[offset++]
+      vx = int16View[offset++]
+      vy = int16View[offset++]
+      id = uint16View[offset++]
 
-      id = intView[offset++]
-      type = @_intToType intView[offset++]
+      r = uint8View[offset << 1]
+      type = @_intToType uint8View[(offset << 1) + 1]
+      offset++
 
       entities[i] = {
         x, y, vx, vy, r, id, type

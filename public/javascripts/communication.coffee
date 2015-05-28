@@ -62,10 +62,10 @@ move = (ax, ay) ->
   angle = -Math.atan2(ay, ax)
   if angle < 0
     angle += Math.PI * 2
-  angle = Math.round(angle / ((2 * Math.PI) / 255))
+  angle = Math.round(angle / ((2 * Math.PI) / 65535))
 
-  buffer = new ArrayBuffer(2)
-  byteView = new Uint8Array(buffer)
+  buffer = new ArrayBuffer(4)
+  byteView = new Uint16Array(buffer)
   byteView[0] = playerId
   byteView[1] = angle
 
@@ -73,7 +73,10 @@ move = (ax, ay) ->
 
 shoot = ->
   playerId = getPlayerId()
-  socket.emit("shoot", {playerId})
+  buffer = new ArrayBuffer(2)
+  byteView = new Uint16Array(buffer)
+  byteView[0] = playerId
+  socket.emit("shoot", buffer)
 
 getPlayerId = ->
   return window.spooter.playerId

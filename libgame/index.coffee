@@ -1,6 +1,6 @@
-LOOP_TIME_INTERVAL = 50 # 20 state updates per second
-MAX_BULLET_SPEED = 500
-PLAYER_SPEED_LIMIT = 500
+LOOP_TIME_INTERVAL = 20 # 50 state updates per second
+MAX_BULLET_SPEED = 255
+PLAYER_SPEED_LIMIT = 255
 PLAYER_ACCELERATION = 200
 PLAYER_SHRINKAGE = 2
 PLAYER_GROWAGE = 10
@@ -13,7 +13,7 @@ ENEMY_SPAWN_PERCENTAGE = .001
 ENEMY_SHRINKAGE = 5
 ENEMY_SIZE_RANGE = 40
 ENEMY_MIN_SIZE = 20
-ENEMY_SPEED_LIMIT = 300
+ENEMY_SPEED_LIMIT = 255
 ENEMY_ACCELERATION_LIMIT = 100
 ENEMY_VISION_DIST = 250
 ENEMY_SHOOT_PERCENTAGE = .003
@@ -83,11 +83,10 @@ class Game
     if not buffer?
       return
 
-    byteView = new Uint8Array(buffer)
-    playerId = byteView[0]
-    angle = byteView[1]
+    playerId = buffer.readUInt16LE(0)
+    angle = buffer.readUInt16LE(2)
 
-    angle *= (2 * Math.PI) / 255
+    angle *= (2 * Math.PI) / 65535.0
     ax = Math.cos(angle)
     ay = -Math.sin(angle)
 
@@ -98,11 +97,12 @@ class Game
     player.ax = ax
     player.ay = ay
 
-  handleShoot: (message) =>
-    if not message? or not message.playerId?
+  handleShoot: (buffer) =>
+    # Invalid message
+    if not buffer?
       return
 
-    {playerId} = message
+    playerId = buffer.readUInt16LE(0)
     if playerId not of @players
       return
 
@@ -198,11 +198,27 @@ class Game
 
     delete map[id]
 
+  canonicalizeState: (state) ->
+    entities = new Array(state.entities.length)
+    for index in [0...state.numEntities]
+      entity = state.entities[index]
+      entities[index] = {
+        x: Math.round(entity.x)
+        y: Math.round(entity.y)
+        vx: Math.round(entity.vx)
+        vy: Math.round(entity.vy)
+        r: Math.round(entity.r)
+        id: entity.id
+        type: entity.type
+      }
+    state.entities = entities
+
   broadcastState: =>
     state = {
       numEntities: @numEntities
       entities: @entities
     }
+    @canonicalizeState state
     array = serializer.toArray(state)
     @io.sockets.emit 'state', array
 

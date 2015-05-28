@@ -16,7 +16,7 @@ describe 'StateSerializer', ->
       array = serializer.toArray(object)
 
       # Should only have 4 bytes with the length
-      assert.equal array.byteLength, 4
+      assert.equal array.byteLength, 2
 
       convertedObject = serializer.toObject(array, {})
 
@@ -27,30 +27,30 @@ describe 'StateSerializer', ->
         numEntities: 3
         entities: [
           {
-            x: 0.0
-            y: 4.0
-            vx: 2.0
-            vy: 8.0
-            r: 2.5
-            id: 0
+            x: 0
+            y: 4
+            vx: 2
+            vy: 65535
+            r: 255
+            id: 255
             type: 'player'
           },
           {
-            x: 1.0
-            y: 2.0
-            vx: 3.0
-            vy: 4.0
-            r: 5.0
+            x: 1
+            y: 2
+            vx: 3
+            vy: 4
+            r: 5
             id: 1
             type: 'enemy'
           },
           {
-            x: 0.5
-            y: 0.25
-            vx: 0.125
-            vy: 0.25
-            r: 0.5
-            id: 2
+            x: 65535
+            y: 65535
+            vx: 0
+            vy: 0
+            r: 0
+            id: 0
             type: 'bullet'
           }
         ]
@@ -58,8 +58,8 @@ describe 'StateSerializer', ->
 
       array = serializer.toArray(object)
 
-      # Should only have 4 + (28 * 3) bytes
-      assert.equal array.byteLength, 4 + (28 * 3)
+      # Should only have 2 + (12 * 3) bytes
+      assert.equal array.byteLength, 2 + (12 * 3)
 
       convertedObject = serializer.toObject(array, {})
 
