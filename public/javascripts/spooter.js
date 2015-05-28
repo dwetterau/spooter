@@ -145,15 +145,22 @@ function update(drawTime) {
     var entity = object.leftState.entities[i];
     leftEntityMap[entity.id + entity.type] = object.leftState.entities[i]
   }
-  interpolatedState = {numEntities: object.rightState.numEntities};
-  interpolatedState.entities = new Array(object.rightState.numEntities);
-  for (i = 0; i < object.rightState.numEntities; i++) {
+  var numEntities = object.rightState.numEntities;
+  if (interpolatedState == undefined) {
+    interpolatedState = {
+      entities: new Array(numEntities)
+    }
+  }
+  interpolatedState.numEntities = numEntities;
+  for (i = 0; i < numEntities; i++) {
     entity = object.rightState.entities[i];
-    var newEntity = {
-      type: entity.type,
-      r: entity.r,
-      id: entity.id
-    };
+    interpolatedState.entities[i] = {};
+    var newEntity = interpolatedState.entities[i];
+
+    newEntity.type = entity.type;
+    newEntity.id = entity.id;
+    newEntity.r = entity.r;
+
     if (leftEntityMap.hasOwnProperty(entity.id + entity.type)) {
       var leftEntity = leftEntityMap[entity.id + entity.type];
       // An updated entity, interpolate between the two states
@@ -170,7 +177,6 @@ function update(drawTime) {
       newEntity.x = hermiteInterpolation(x0, x1, vx0, vx1, t0, t1, drawTime);
       newEntity.y = hermiteInterpolation(y0, y1, vy0, vy1, t0, t1, drawTime);
     }
-    interpolatedState.entities[i] = newEntity;
   }
   return true;
 }

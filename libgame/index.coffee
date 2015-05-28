@@ -351,7 +351,7 @@ class Game
       dx = enemy.x - enemy.destination.x
       dy = enemy.y - enemy.destination.y
       if (vmag > dx * dx + dy * dy)
-        enemy.destination = undefined
+        enemy.destination = null
 
     closestPlayer = null
     closestDistance = Number.MAX_VALUE
@@ -378,14 +378,16 @@ class Game
         @createBullet enemy.x, enemy.y, ax, ay, enemy
 
   moveEnemy: (enemy, dt) =>
-    if !enemy.destination
-      return
-    ax = enemy.destination.x - enemy.x
-    ay = enemy.destination.y - enemy.y
-    mag = Math.sqrt(ax * ax + ay * ay)
-    if mag > ENEMY_ACCELERATION_LIMIT
-      ax *= ENEMY_ACCELERATION_LIMIT / mag
-      ay *= ENEMY_ACCELERATION_LIMIT / mag
+    if enemy.destination
+      ax = enemy.destination.x - enemy.x
+      ay = enemy.destination.y - enemy.y
+      mag = Math.sqrt(ax * ax + ay * ay)
+      if mag > ENEMY_ACCELERATION_LIMIT
+        ax *= ENEMY_ACCELERATION_LIMIT / mag
+        ay *= ENEMY_ACCELERATION_LIMIT / mag
+    else
+      ax = 0
+      ay = 0
 
     @moveEntity enemy, dt, ax, ay, (
       ENEMY_SPEED_LIMIT * (ENEMY_MIN_SIZE / enemy.r))
