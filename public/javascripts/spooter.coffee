@@ -177,6 +177,18 @@ drawLine = (x1, y1, x2, y2) ->
   ctx.moveTo(x1, y1)
   ctx.lineTo(x2, y2)
 
+drawEntity = (entity) ->
+  if entity.type is "player"
+    if entity.id is window.spooter.playerId
+      ctx.fillStyle = "#FF0000"
+    else
+      ctx.fillStyle = "#FFFF00"
+  else if entity.type is "enemy"
+    ctx.fillStyle = "#5E2D79"
+  else
+    ctx.fillStyle = "#CC8800"
+  drawCircle entity.x - viewportX, entity.y - viewportY, entity.r
+
 draw = (state) ->
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   for i in [0...state.numEntities]
@@ -208,16 +220,7 @@ draw = (state) ->
   for i in [0...state.numEntities]
     entity = state.entities[i]
     if not inViewport(entity) then continue
-    if entity.type is "player"
-      if entity.id is window.spooter.playerId
-        ctx.fillStyle = "#FF0000"
-      else
-        ctx.fillStyle = "#FFFF00"
-    else if entity.type is "enemy"
-      ctx.fillStyle = "#5E2D79"
-    else
-      ctx.fillStyle = "#CC8800"
-    drawCircle entity.x - viewportX, entity.y - viewportY, entity.r
+    drawEntity entity
 
 resizeCanvas()
 gameLoop()
